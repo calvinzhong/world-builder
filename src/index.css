@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Inter", sans-serif;
+}
+
+/* 主题过渡动画 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 浅色主题 - 默认 */
+:root, .light {
+  @theme {
+    --color-primary: #4c616c;
+    --color-primary-dim: #40555f;
+    --color-primary-container: #cfe6f2;
+    --color-on-primary: #f0f9ff;
+    --color-on-primary-container: #40555f;
+    
+    --color-secondary-container: #d1e6f0;
+    --color-on-secondary-container: #41545d;
+    
+    --color-surface: #f8fafb;
+    --color-surface-container-low: #f0f4f6;
+    --color-surface-container-high: #e1eaec;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-variant: #d9e4e8;
+    
+    --color-on-surface: #1a1a1a;
+    --color-on-surface-variant: #4a4a4a;
+    --color-outline: #727d80;
+    --color-outline-variant: #a9b4b7;
+    
+    --color-error: #9f403d;
+  }
+}
+
+/* 深色主题 */
+.dark {
+  @theme {
+    --color-primary: #8fb3c2;
+    --color-primary-dim: #7ca8b7;
+    --color-primary-container: #384a52;
+    --color-on-primary: #1a2428;
+    --color-on-primary-container: #cfe6f2;
+    
+    --color-secondary-container: #2d3f48;
+    --color-on-secondary-container: #d1e6f0;
+    
+    --color-surface: #0d1117;
+    --color-surface-container-low: #161b22;
+    --color-surface-container-high: #21262d;
+    --color-surface-container-lowest: #010409;
+    --color-surface-variant: #30363d;
+    
+    --color-on-surface: #f0f6fc;
+    --color-on-surface-variant: #8b949e;
+    --color-outline: #484f58;
+    --color-outline-variant: #30363d;
+    
+    --color-error: #ff7b72;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-sans antialiased;
+  }
+}
+
+.label-font {
+  font-family: var(--font-label);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.book-shadow {
+  box-shadow: 10px 10px 20px rgba(0,0,0,0.1), 
+              -1px 0 2px rgba(255,255,255,0.8) inset;
+}

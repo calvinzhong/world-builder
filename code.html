@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary": "#f0f9ff",
+                        "surface": "#f8fafb",
+                        "secondary-container": "#d1e6f0",
+                        "inverse-on-surface": "#9a9d9e",
+                        "error": "#9f403d",
+                        "on-error": "#fff7f6",
+                        "error-dim": "#4e0309",
+                        "surface-container": "#e8eff1",
+                        "primary": "#4c616c",
+                        "primary-dim": "#40555f",
+                        "on-secondary": "#f2faff",
+                        "on-primary-fixed-variant": "#495f69",
+                        "background": "#f8fafb",
+                        "surface-container-high": "#e1eaec",
+                        "secondary-fixed": "#d1e6f0",
+                        "on-secondary-fixed": "#2f424a",
+                        "secondary-dim": "#43565f",
+                        "on-secondary-container": "#41545d",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#cfe6f2",
+                        "on-primary-container": "#40555f",
+                        "tertiary": "#586064",
+                        "secondary": "#4f626b",
+                        "on-surface-variant": "#566164",
+                        "surface-dim": "#cfdce0",
+                        "surface-variant": "#d9e4e8",
+                        "outline": "#727d80",
+                        "surface-container-low": "#f0f4f6",
+                        "surface-container-highest": "#d9e4e8",
+                        "on-surface": "#2a3437",
+                        "on-tertiary": "#f1fafe",
+                        "inverse-surface": "#0b0f10",
+                        "on-tertiary-fixed-variant": "#5f686b",
+                        "on-tertiary-container": "#545d61",
+                        "outline-variant": "#a9b4b7",
+                        "tertiary-dim": "#4c5458",
+                        "primary-fixed-dim": "#c1d8e4",
+                        "tertiary-fixed": "#ecf5f9",
+                        "surface-tint": "#4c616c",
+                        "on-secondary-fixed-variant": "#4b5e67",
+                        "on-background": "#2a3437",
+                        "inverse-primary": "#d8effb",
+                        "on-tertiary-fixed": "#424b4e",
+                        "error-container": "#fe8983",
+                        "tertiary-container": "#ecf5f9",
+                        "on-error-container": "#752121",
+                        "secondary-fixed-dim": "#c3d8e2",
+                        "primary-container": "#cfe6f2",
+                        "on-primary-fixed": "#2d424c",
+                        "tertiary-fixed-dim": "#dee7eb",
+                        "surface-bright": "#f8fafb"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Manrope"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8fafb;
+            color: #2a3437;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100/50 dark:border-slate-800/50 shadow-sm shadow-slate-200/50 dark:shadow-none font-['Manrope'] antialiased tracking-tight">
+<div class="flex items-center justify-between px-12 h-20 w-full max-w-[3840px] mx-auto">
+<div class="flex items-center gap-12">
+<span class="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-100">Digital Atheneum</span>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors" href="#">世界构建</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors" href="#">作品原稿</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100/50 border-none rounded-full text-sm w-64 focus:ring-1 focus:ring-primary/30 transition-all" placeholder="搜索条目..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined text-slate-700 dark:text-slate-300">notifications</span>
+</button>
+<button class="p-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined text-slate-700 dark:text-slate-300">settings</span>
+</button>
+<img alt="User profile avatar" class="w-10 h-10 rounded-full bg-surface-container object-cover border border-slate-100" data-alt="Close up portrait of a digital artist" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxAUV_B3yUTsfJ_3uiD_QhZJSgwbFl5Lt2LqqYqW9nxupjyiflNpDYp3q1GQkVTQYy-pxZ-RwM-pC6V14ukgXkAsOt8DjD-KCnNW_Hycvdzrz8riYb_Mq5fx4rAqGsnq9hXfjOGhAV7HP1nwtRJX6KIyU3Xzu-0PAbQbQc0PKEfQZy8qQflnAQirvoerWsBUrFaL2hSkNalwTr8AI0QdeGKtraXvQcbjweexYhtkEafrbl4rmLyw1cGxvvCSdAFACep943sUlXl5Zv"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="h-screen w-72 fixed left-0 top-20 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-y-2 p-6 overflow-y-auto z-40">
+<div class="mb-8 px-2">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+</div>
+<div>
+<h3 class="text-sm font-bold text-slate-900">Current World</h3>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest">High Fantasy Series</p>
+</div>
+</div>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>概览</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span>时代</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">timeline</span>
+<span>时间轴</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>势力</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_book</span>
+<span>人物</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">category</span>
+<span>物品</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span>力量体系</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg hover:translate-x-1 transition-transform duration-200 font-['Manrope'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span>货币</span>
+</a>
+</div>
+<div class="mt-auto pb-4">
+<button class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-md hover:bg-primary-dim transition-colors text-sm font-semibold">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Entry
+            </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-72 mt-20 p-12 max-w-[1800px]">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row items-start gap-12 mb-16">
+<div class="relative group">
+<div class="w-48 h-64 bg-surface-container-low rounded-lg overflow-hidden shadow-2xl shadow-slate-200/50">
+<img alt="苍空之影 portrait" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" data-alt="Elegant cinematic portrait of a mystical warrior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYporaoE_QYUIjf28cYcufCMSgGX2sMMOw7vvKD-oh9hilOdmFIuGCFZNKzVos6DEnhVQNTmtJX-jAkrE2Ybdag7czsEG2lWo-WcGFxa_cgxULJwxAFGqUQ4_1EfB2kfMnsQB42p2dawXjQRo8FV5QZR7_csBZXVctME-I91tpSoctkGQSgUDinnhfT07FJvwseuUusxRrdP_O9-0jEAOkHcxpVYKVbfKEuXf5uuQXm_ViFIIejpmMKG6wMRt3vuDnRWK8sIACwL--"/>
+</div>
+<div class="absolute -bottom-4 -right-4 w-24 h-24 border-r-2 border-b-2 border-primary/20"></div>
+</div>
+<div class="flex-1 space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<div class="flex items-center gap-4 mb-2">
+<h1 class="text-5xl font-extrabold tracking-tight text-on-surface">苍空之影</h1>
+<span class="text-2xl font-light text-outline">Shadow of the Azure Sky</span>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant font-medium">
+<span>24 岁</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span>前空岛守卫军副团长</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-6 py-2 bg-surface-container-high text-on-surface rounded-md hover:bg-surface-variant transition-colors text-sm">
+<span class="material-symbols-outlined text-sm">edit</span>
+                            编辑
+                        </button>
+<button class="flex items-center gap-2 px-6 py-2 bg-surface-container-high text-on-surface rounded-md hover:bg-surface-variant transition-colors text-sm">
+<span class="material-symbols-outlined text-sm">share</span>
+                            分享
+                        </button>
+<button class="p-2 text-error hover:bg-error/10 rounded-md transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-medium tracking-wide">守护者</span>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-medium tracking-wide">意志坚定</span>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-medium tracking-wide">虚空行者</span>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-medium tracking-wide">流放者</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed max-w-3xl text-lg font-light">
+                    诞生于浮空群岛最深处的阴影之中，她是唯一一个在“大觉醒”仪式中幸存的守卫。背负着被诅咒的力量，她在云海与虚空之间徘徊，寻找着破碎星剑的真相。她的存在本身就是对秩序的挑战。
+                </p>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Social Bonds & Links -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Social Bonds -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-slate-50">
+<h2 class="text-sm font-bold text-primary uppercase tracking-[0.2em] mb-8">羁绊关系 <span class="font-normal text-outline-variant ml-2">SOCIAL BONDS</span></h2>
+<div class="space-y-6">
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<img alt="Mentor" class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of an elderly sage" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK3dlLkqpMq2lrbP6gOwt6-e_d9xUqJe2y8Af6MK4P0P6KOwcFkRXa6dP31eYgyr_7kjOTJZP4eW3JsobMWHsoBEn0ivzyNnNI1d6OPXfQB0Y-OMHGiSF6HTcD-Y_vP-M7zMDs_N8e70MWxRteej6pWcfQIIOS-Y0vkk4nLksM0ldqDcIBZXBP64JZ-csZ68_roJ3YsRiNsnIC6XC6PF8tK-qIxDLYggrKi5lXdh7HPkW6RRuUhaT9kVwG9TAlD3Nn1DHosD2dT8TU"/>
+<div>
+<h4 class="text-sm font-bold text-on-surface">大贤者 索伦</h4>
+<p class="text-xs text-on-surface-variant">导师 / 命运领路人</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-lg font-bold text-primary">92</span>
+<div class="w-12 h-1 bg-surface-container rounded-full mt-1">
+<div class="h-full bg-primary rounded-full w-[92%]"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<img alt="Rival" class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a young knight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaqVXJlo0NrJ689GiJfZRqfwZFuNUtIc814d4krGZgwLu5vEe8MOWAQWRguTjKC1lXxmqiMNr2wczRnyOHLteu185vBFHYvKRuzx2aF0-5HlsCA9ehT90yRdSofswh1LFAA_sokf52Bkd5cqofgWIk_JFd4Mmx0tqYkmoW9VPrKFAkrFJcrHXC1s3uiXHkfqR7rHQhDM0P_BSjaKUkL5NyR-k7MDHeHrUvjFitgEZMpsBHRk8ssZB7VxdlJ_uJ6otKjgdC4MJdMF-N"/>
+<div>
+<h4 class="text-sm font-bold text-on-surface">凯恩·逐光者</h4>
+<p class="text-xs text-on-surface-variant">宿敌 / 旧友</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-lg font-bold text-error">45</span>
+<div class="w-12 h-1 bg-surface-container rounded-full mt-1">
+<div class="h-full bg-error rounded-full w-[45%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Cross-Module Links -->
+<section class="space-y-4">
+<h2 class="text-sm font-bold text-primary uppercase tracking-[0.2em] mb-6">关联模组 <span class="font-normal text-outline-variant ml-2">CROSS-MODULE</span></h2>
+<a class="block p-5 bg-surface-container-low hover:bg-surface-container-high rounded-lg transition-all group border border-transparent hover:border-outline-variant/10" href="#">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">groups</span>
+<div>
+<p class="text-[10px] text-outline font-bold uppercase tracking-wider">所属势力</p>
+<h4 class="text-sm font-bold text-on-surface">星界卫队 (The Astral Guard)</h4>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</a>
+<a class="block p-5 bg-surface-container-low hover:bg-surface-container-high rounded-lg transition-all group border border-transparent hover:border-outline-variant/10" href="#">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">swords</span>
+<div>
+<p class="text-[10px] text-outline font-bold uppercase tracking-wider">拥有物品</p>
+<h4 class="text-sm font-bold text-on-surface">破碎星剑 (Shattered Star Sword)</h4>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</a>
+<a class="block p-5 bg-surface-container-low hover:bg-surface-container-high rounded-lg transition-all group border border-transparent hover:border-outline-variant/10" href="#">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<div>
+<p class="text-[10px] text-outline font-bold uppercase tracking-wider">力量体系</p>
+<h4 class="text-sm font-bold text-on-surface">虚空操控 (Void Manipulation)</h4>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</a>
+</section>
+</div>
+<!-- Right Column: Timeline & Narrative -->
+<div class="col-span-12 lg:col-span-8">
+<section class="bg-surface-container-lowest p-10 rounded-xl shadow-sm border border-slate-50 min-h-full">
+<div class="flex items-center justify-between mb-12">
+<h2 class="text-sm font-bold text-primary uppercase tracking-[0.2em]">大事记里程碑 <span class="font-normal text-outline-variant ml-2">CHRONICLE MILESTONES</span></h2>
+<span class="text-[10px] font-bold text-outline-variant">TOTAL 4 EVENTS</span>
+</div>
+<div class="relative pl-8 border-l border-surface-container">
+<!-- Timeline Item -->
+<div class="mb-12 relative">
+<div class="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-primary ring-4 ring-white"></div>
+<div class="flex items-center gap-4 mb-2">
+<span class="px-2 py-0.5 bg-surface-container text-[10px] font-bold rounded text-on-surface-variant font-['Inter']">AGE 12</span>
+<h3 class="text-xl font-bold text-on-surface">大觉醒 (The Great Awakening)</h3>
+</div>
+<p class="text-on-surface-variant leading-relaxed font-light mb-4">
+                                在星界卫队的年度洗礼中，意外触碰了被封印的虚空遗物。所有同龄人都在仪式中丧生，唯独她活了下来，并获得了操控阴影的能力。
+                            </p>
+<div class="w-full h-40 rounded-lg bg-surface-container-low overflow-hidden">
+<img alt="The Great Awakening" class="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity duration-500" data-alt="Abstract mystical explosion of blue and black energy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7rDEE2ROUvxbBpl4-xg8V-UwrV5PJ4GJvKPwujD2Kc9rpHY79f_9IdQ5p7jrFz-94A8Dc8nAOndq6P6pwOmhZyx9MADOqPtjINZoSZn6OAkXnEvO7J-v5niQnBb3lEh38rhZrEwWiJ20vlOSZuEI8tU9NdGv7kZBU9w2izqcCT4S9uWK-kGPuY4Y8nXN3d5tDsB2gDMAPNbRIXtnVYUhEVe7TsLeOwtCij9usnn2XoRS5VC2QSEL-Grol2rkwQvB57gSiaujvUx6P"/>
+</div>
+</div>
+<!-- Timeline Item -->
+<div class="mb-12 relative">
+<div class="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-surface-container ring-4 ring-white group-hover:bg-primary transition-colors"></div>
+<div class="flex items-center gap-4 mb-2">
+<span class="px-2 py-0.5 bg-surface-container text-[10px] font-bold rounded text-on-surface-variant font-['Inter']">AGE 19</span>
+<h3 class="text-xl font-bold text-on-surface">空岛流放 (Exile from the Sky Islands)</h3>
+</div>
+<p class="text-on-surface-variant leading-relaxed font-light">
+                                因为私自调查禁忌历史，被议会判定为“被污染者”。在索伦大贤者的默许下，她带着家族信物——破碎星剑，纵身跳下云海，开始了流浪生涯。
+                            </p>
+</div>
+<!-- Timeline Item -->
+<div class="relative">
+<div class="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-surface-container ring-4 ring-white"></div>
+<div class="flex items-center gap-4 mb-2">
+<span class="px-2 py-0.5 bg-surface-container text-[10px] font-bold rounded text-on-surface-variant font-['Inter']">NOW</span>
+<h3 class="text-xl font-bold text-on-surface">暗影行者 (Shadow Walker)</h3>
+</div>
+<p class="text-on-surface-variant leading-relaxed font-light">
+                                目前活跃于下界荒原，作为一名自由佣兵，暗中保护着那些被秩序遗忘的边境村落，同时收集着重铸星剑所需的碎片。
+                            </p>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Footer / Signature -->
+<footer class="mt-20 pt-12 border-t border-surface-container flex flex-col items-center justify-center space-y-4">
+<div class="flex items-center gap-4 opacity-30">
+<div class="w-12 h-[1px] bg-outline"></div>
+<span class="text-xs tracking-[0.4em] font-light text-on-surface uppercase">Curated by Digital Atheneum</span>
+<div class="w-12 h-[1px] bg-outline"></div>
+</div>
+<p class="text-[10px] text-outline-variant font-medium tracking-wider">LAST MODIFIED: 2024.11.24 14:20 GMT</p>
+</footer>
+</main>
+</body></html>
