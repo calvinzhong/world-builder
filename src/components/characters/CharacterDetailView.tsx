@@ -123,324 +123,394 @@ const CharacterDetailView = () => {
       animate={{ opacity: 1, x: 0 }} 
       className="space-y-8"
     >
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-        <div className="flex items-start gap-8">
-          <div className="w-48 h-48 rounded-2xl bg-surface-container-high overflow-hidden shadow-lg">
+      {/* 顶部保存按钮 */}
+      <div className="flex justify-end">
+        {isEditing && (
+          <motion.button
+            onClick={handleSave}
+            className="px-6 py-2 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-dim transition-colors"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            保存
+          </motion.button>
+        )}
+      </div>
+
+      {/* 顶部三列布局 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* 左侧：头像、姓名、年龄、等级、标签 */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="w-full aspect-square rounded-2xl bg-surface-container-high overflow-hidden shadow-lg">
             <img src={`https://picsum.photos/seed/${char.id}/400/400`} alt={char.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <motion.div 
-                key={isEditing ? 'edit-name' : 'view-name'}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedCharacter.name}
-                    onChange={(e) => setEditedCharacter({ ...editedCharacter, name: e.target.value })}
-                    className="text-4xl font-bold border-b-2 border-primary outline-none"
-                  />
-                ) : (
-                  <h1 className="text-4xl font-bold">{char.name}</h1>
-                )}
-              </motion.div>
-              <div className="flex items-center gap-2">
-                {isEditing ? (
-                  <button onClick={handleSave} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
-                    <Save className="w-5 h-5 text-primary" />
-                  </button>
-                ) : (
-                  <button onClick={handleEdit} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
-                    <Edit3 className="w-5 h-5 text-on-surface-variant" />
-                  </button>
-                )}
-                <button onClick={handleShare} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
-                  <Share2 className="w-5 h-5 text-on-surface-variant" />
-                </button>
-                <button onClick={() => setIsDeleteModalOpen(true)} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
-                  <Trash2 className="w-5 h-5 text-on-surface-variant" />
-                </button>
-              </div>
+          
+          <div className="space-y-4">
+            <motion.div 
+              key={isEditing ? 'edit-name' : 'view-name'}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedCharacter.name}
+                  onChange={(e) => setEditedCharacter({ ...editedCharacter, name: e.target.value })}
+                  className="w-full text-2xl font-bold border-b-2 border-primary outline-none"
+                />
+              ) : (
+                <h1 className="text-2xl font-bold text-center">{char.name}</h1>
+              )}
+            </motion.div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {isEditing ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-on-surface-variant mb-2">年龄</label>
+                    <input
+                      type="text"
+                      value={editedCharacter.age}
+                      onChange={(e) => setEditedCharacter({ ...editedCharacter, age: e.target.value })}
+                      className="w-full px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-on-surface-variant mb-2">等级</label>
+                    <input
+                      type="text"
+                      value={editedCharacter.level || ''}
+                      onChange={(e) => setEditedCharacter({ ...editedCharacter, level: e.target.value })}
+                      className="w-full px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 bg-surface-container-low rounded-lg text-center">
+                    <p className="text-sm font-medium">年龄</p>
+                    <p className="text-lg font-bold">{char.age}</p>
+                  </div>
+                  <div className="p-3 bg-surface-container-low rounded-lg text-center">
+                    <p className="text-sm font-medium">等级</p>
+                    <p className="text-lg font-bold">{char.level || 'N/A'}</p>
+                  </div>
+                </>
+              )}
             </div>
-            <motion.div 
-              key={isEditing ? 'edit-age' : 'view-age'}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className="mb-4"
-            >
+            
+            <div>
+              <label className="block text-sm font-medium text-on-surface-variant mb-3">标签</label>
               {isEditing ? (
-                <input
-                  type="text"
-                  value={editedCharacter.age}
-                  onChange={(e) => setEditedCharacter({ ...editedCharacter, age: e.target.value })}
-                  className="px-3 py-1 bg-surface-container-high rounded-md text-sm"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  {[0, 1, 2, 3, 4, 5].map(i => (
+                    <input
+                      key={i}
+                      type="text"
+                      value={editedCharacter.traits[i] || ''}
+                      onChange={(e) => {
+                        const newTraits = [...editedCharacter.traits];
+                        newTraits[i] = e.target.value;
+                        setEditedCharacter({ ...editedCharacter, traits: newTraits.filter(Boolean) });
+                      }}
+                      className="px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder={`标签${i+1}`}
+                    />
+                  ))}
+                </div>
               ) : (
-                <p className="text-on-surface-variant/60">{char.age}岁 · 前空岛守卫军副团长</p>
-              )}
-            </motion.div>
-            <motion.div 
-              key={isEditing ? 'edit-traits' : 'view-traits'}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="mb-6"
-            >
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={editedCharacter.traits.join(', ')}
-                  onChange={(e) => setEditedCharacter({ 
-                    ...editedCharacter, 
-                    traits: e.target.value.split(',').map(t => t.trim()).filter(t => t) 
-                  })}
-                  placeholder="输入特质，用逗号分隔"
-                  className="w-full px-3 py-2 bg-surface-container-high rounded-md text-sm"
-                />
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {char.traits.map(trait => (
-                    <Badge key={trait} color="bg-surface-container-high text-on-surface-variant">{trait}</Badge>
+                <div className="grid grid-cols-2 gap-2">
+                  {char.traits?.map((trait, index) => (
+                    <div key={index} className="p-3 bg-surface-container-low rounded-lg text-center">
+                      <p className="text-sm font-medium">标签{index+1}</p>
+                      <p className="font-bold">{trait}</p>
+                    </div>
+                  )) || Array(6).fill(0).map((_, i) => (
+                    <div key={i} className="p-3 bg-surface-container-low rounded-lg text-center">
+                      <p className="text-sm font-medium">标签{i+1}</p>
+                      <p className="text-on-surface-variant/40">-</p>
+                    </div>
                   ))}
                 </div>
               )}
-            </motion.div>
-            <motion.div 
-              key={isEditing ? 'edit-factions' : 'view-factions'}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="mb-6"
-            >
-              {isEditing ? (
-                <select
-                  multiple
-                  value={editedCharacter.factionIds || []}
-                  onChange={(e) => {
-                    const selectElement = e.target as HTMLSelectElement;
-                    const selectedOptions = Array.from(selectElement.selectedOptions).map(option => option.value);
-                    setEditedCharacter({ ...editedCharacter, factionIds: selectedOptions });
-                  }}
-                  className="w-full px-3 py-2 bg-surface-container-high rounded-md text-sm h-32"
-                >
-                  {world.factions.map(faction => (
-                    <option key={faction.id} value={faction.id}>{faction.name}</option>
-                  ))}
-                </select>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {factions.map(faction => (
-                    <Badge key={faction.id} color="bg-primary-container text-on-primary-container">{faction.name}</Badge>
-                  ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* 中间：简介 */}
+        <div className="lg:col-span-1">
+          <div className="h-full bg-surface-container-low rounded-2xl p-6">
+            <h2 className="text-lg font-bold mb-4">简介</h2>
+            {isEditing ? (
+              <textarea
+                value={editedCharacter.bio}
+                onChange={(e) => setEditedCharacter({ ...editedCharacter, bio: e.target.value })}
+                className="w-full h-full px-4 py-3 bg-surface rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="人物简介"
+              />
+            ) : (
+              <p className="text-on-surface-variant/80 leading-relaxed">{char.bio || '暂无简介'}</p>
+            )}
+          </div>
+        </div>
+        
+        {/* 右侧：力量体系、武力值雷达图 */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-surface-container-low rounded-2xl p-6">
+            <h2 className="text-lg font-bold mb-4">力量体系</h2>
+            <div className="space-y-2">
+              {['修为境界', '灵力质量', '神魂强度', '肉身强度', '功法神通', '法宝外物', '心性机缘'].map((item, index) => (
+                <div key={index} className="flex justify-between items-center p-2 bg-surface rounded-lg">
+                  <span className="text-sm">{index+1}. {item}</span>
+                  {isEditing ? (
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={editedCharacter.powerStats?.[item] || 50}
+                      onChange={(e) => {
+                        const newPowerStats = { ...editedCharacter.powerStats };
+                        newPowerStats[item] = parseInt(e.target.value);
+                        setEditedCharacter({ ...editedCharacter, powerStats: newPowerStats });
+                      }}
+                      className="w-24"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium">{char.powerStats?.[item] || 50}</span>
+                  )}
                 </div>
-              )}
-            </motion.div>
-            <p className="text-on-surface-variant/80 leading-relaxed">
-              诞生于浮空群岛最深处的阴影之中，她是唯一一个在"大觉醒"仪式中幸存的守卫。
-              背负着被诅咒的力量，她在云海与虚空之间徘徊，寻找着破碎星剑的真相。她的存在本身就是对秩序的挑战。
-            </p>
+              ))}
+            </div>
+          </div>
+          
+          <div className="bg-surface-container-low rounded-2xl p-6">
+            <h2 className="text-lg font-bold mb-4">武力值雷达图</h2>
+            <div className="aspect-square flex items-center justify-center">
+              <div className="text-on-surface-variant/40 text-sm">雷达图占位</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* 中间三列布局：羁绊关系、所属势力、持有物品 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Social Bonds */}
-        <div className="lg:col-span-1 space-y-8">
-          <Card title="羁绊关系 SOCIAL BONDS">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  羁绊关系
-                </h3>
-                <button 
-                  onClick={() => {
-                    setSelectedBond({ characterId: '', type: '', friendlyValue: 50, hostileValue: 0 });
-                    setIsRelationshipModalOpen(true);
-                  }}
-                  className="p-2 text-primary hover:bg-primary/10 rounded-full"
-                >
-                  <Plus className="w-4 h-4" />
+        {/* 羁绊关系 */}
+        <div className="bg-surface-container-high rounded-2xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold">羁绊关系</h2>
+            </div>
+            <button 
+              onClick={() => {
+                setSelectedBond({ characterId: '', type: '', friendlyValue: 50, hostileValue: 0 });
+                setIsRelationshipModalOpen(true);
+              }}
+              className="p-2 text-primary hover:bg-primary/10 rounded-full"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            {char.bonds && char.bonds.length > 0 ? (
+              char.bonds.map(bond => {
+                const target = world.characters.find(c => c.id === bond.characterId);
+                return (
+                  <div key={bond.characterId} className="flex items-center gap-4 p-3 bg-surface rounded-lg">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden">
+                      <img src={`https://picsum.photos/seed/${bond.characterId}/100/100`} alt={target?.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{target?.name}</p>
+                      <p className="text-xs text-on-surface-variant/60">{bond.type}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleEditRelationship(bond)}
+                        className="p-2 text-primary hover:bg-primary/10 rounded-full"
+                      >
+                        <PenTool className="w-4 h-4" />
+                      </button>
+                      <button className="p-2 text-error hover:bg-error/10 rounded-full">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-on-surface-variant/40 italic">暂无羁绊关系</p>
+            )}
+          </div>
+        </div>
+        
+        {/* 所属势力 */}
+        <div className="bg-surface-container-high rounded-2xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zm0 3.84L18.16 7 12 9.16 5.84 7 12 5.84zm0 12.32l-6.16-3.43L12 14.32l6.16 3.43-6.16 3.43z"/>
+              </svg>
+              <h2 className="text-lg font-bold">所属势力</h2>
+            </div>
+            <button className="p-2 text-primary hover:bg-primary/10 rounded-full">
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            {factions.map(faction => (
+              <div key={faction.id} className="flex items-center gap-4 p-3 bg-surface rounded-lg">
+                <div className="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center">
+                  <span className="text-xl font-bold">{faction.name.charAt(0)}</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{faction.name}</p>
+                  <p className="text-xs text-on-surface-variant/60">势力成员</p>
+                </div>
+                <button className="p-2 text-primary hover:bg-primary/10 rounded-full">
+                  <PenTool className="w-4 h-4" />
                 </button>
               </div>
-              <motion.div
-                key={isEditing ? 'edit-bonds' : 'view-bonds'}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {isEditing ? (
-                  editedCharacter.bonds.map((bond, index) => {
-                    const target = world.characters.find(c => c.id === bond.characterId);
-                    return (
-                      <div key={bond.characterId} className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
-                          <img src={`https://picsum.photos/seed/${bond.characterId}/100/100`} alt={target?.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        </div>
-                        <div className="flex-1">
-                          <select
-                            value={bond.characterId}
-                            onChange={(e) => {
-                              const newBonds = [...editedCharacter.bonds];
-                              newBonds[index] = { ...newBonds[index], characterId: e.target.value };
-                              setEditedCharacter({ ...editedCharacter, bonds: newBonds });
-                            }}
-                            className="w-full px-2 py-1 bg-surface-container-high rounded-md text-xs mb-1"
-                          >
-                            {world.characters.filter(c => c.id !== id).map(character => (
-                              <option key={character.id} value={character.id}>{character.name}</option>
-                            ))}
-                          </select>
-                          <div className="flex justify-between items-center mb-1">
-                            <input
-                              type="text"
-                              value={bond.type}
-                              onChange={(e) => {
-                                const newBonds = [...editedCharacter.bonds];
-                                newBonds[index] = { ...newBonds[index], type: e.target.value };
-                                setEditedCharacter({ ...editedCharacter, bonds: newBonds });
-                              }}
-                              className="px-2 py-1 bg-surface-container-high rounded-md text-xs"
-                              placeholder="关系类型"
-                            />
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              value={bond.value}
-                              onChange={(e) => {
-                                const newBonds = [...editedCharacter.bonds];
-                                newBonds[index] = { ...newBonds[index], value: parseInt(e.target.value) };
-                                setEditedCharacter({ ...editedCharacter, bonds: newBonds });
-                              }}
-                              className="w-24 mx-2"
-                            />
-                            <span className="text-sm font-bold text-primary min-w-[30px]">{bond.value}</span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              const newBonds = editedCharacter.bonds.filter((_, i) => i !== index);
-                              setEditedCharacter({ ...editedCharacter, bonds: newBonds });
-                            }}
-                            className="text-xs text-error hover:text-error-dim transition-colors"
-                          >
-                            删除羁绊
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  char.bonds.map(bond => {
-                    const target = world.characters.find(c => c.id === bond.characterId);
-                    return (
-                      <div key={bond.characterId} className="flex items-center gap-4 p-3 bg-surface rounded-lg">
-                        <div className="w-12 h-12 rounded-lg overflow-hidden">
-                          <img src={`https://picsum.photos/seed/${bond.characterId}/100/100`} alt={target?.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{target?.name}</p>
-                          <p className="text-xs text-on-surface-variant/60">{bond.type}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => handleEditRelationship(bond)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-full"
-                          >
-                            <PenTool className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 text-error hover:bg-error/10 rounded-full">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </motion.div>
-              {char.bonds.length === 0 && <p className="text-sm text-on-surface-variant/40 italic">暂无羁绊关系</p>}
-              {isEditing && (
-                <motion.button 
-                  onClick={() => {
-                    const newBond = {
-                      characterId: world.characters[0]?.id || '',
-                      type: '朋友',
-                      value: 50
-                    };
-                    setEditedCharacter({ 
-                      ...editedCharacter, 
-                      bonds: [...editedCharacter.bonds, newBond] 
-                    });
-                  }}
-                  className="w-full px-4 py-2 bg-surface-container-low rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.4 }}
-                >
-                  <Plus className="w-4 h-4" /> 添加新羁绊
-                </motion.button>
-              )}
-            </div>
-          </Card>
-
-          <Card title="关联模组 CROSS-MODULE">
-            <div className="space-y-4">
-              {factions.map(faction => (
-                <Link key={faction.id} to={`/factions/${faction.id}`} className="block hover:bg-surface-container-high/50 transition-colors">
-                  <div className="p-4 bg-surface-container-low rounded-xl">
-                    <div className="flex items-center gap-2 mb-2">
-                      <LinkIcon className="w-4 h-4 text-primary" />
-                      <h4 className="font-bold">{faction.name}</h4>
-                    </div>
-                    <p className="text-xs text-on-surface-variant/60">所属势力</p>
-                  </div>
-                </Link>
-              ))}
-              {items.map(item => (
-                <Link key={item.id} to={`/items/${item.id}`} className="block hover:bg-surface-container-high/50 transition-colors">
-                  <div className="p-4 bg-surface-container-low rounded-xl">
-                    <div className="flex items-center gap-2 mb-2">
-                      <LinkIcon className="w-4 h-4 text-primary" />
-                      <h4 className="font-bold">{item.name}</h4>
-                    </div>
-                    <p className="text-xs text-on-surface-variant/60">{item.type}</p>
-                  </div>
-                </Link>
-              ))}
-              {(factions.length === 0 && items.length === 0) && <p className="text-xs text-on-surface-variant/40">无关联模组</p>}
-            </div>
-          </Card>
+            ))}
+            {factions.length === 0 && <p className="text-sm text-on-surface-variant/40 italic">暂无所属势力</p>}
+          </div>
         </div>
-
-        {/* Right Column - Chronicle Milestones */}
-        <div className="lg:col-span-2">
-          <Card title="大事记里程碑 CHRONICLE MILESTONES">
-            <div className="relative pl-8 space-y-12 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-outline-variant/30">
-              {char.milestones.map((m, index) => (
-                <div key={m.id} className="relative">
-                  <div className="absolute -left-[31px] top-1.5 w-6 h-6 rounded-full bg-surface border-4 border-primary shadow-sm" />
-                  <div className="bg-surface-container-low rounded-2xl p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h4 className="text-lg font-bold">{m.title}</h4>
-                      <Badge color="bg-surface-container-high text-on-surface-variant">Age {index + 1}</Badge>
-                    </div>
-                    <p className="text-on-surface-variant/80 leading-relaxed mb-4">{m.description}</p>
-                    <div className="h-40 bg-surface-container-high rounded-lg flex items-center justify-center">
-                      <span className="text-on-surface-variant/40 text-sm">事件图像</span>
-                    </div>
-                  </div>
+        
+        {/* 持有物品 */}
+        <div className="bg-surface-container-high rounded-2xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <Sword className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold">持有物品</h2>
+            </div>
+            <button className="p-2 text-primary hover:bg-primary/10 rounded-full">
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            {items.map(item => (
+              <div key={item.id} className="flex items-center gap-4 p-3 bg-surface rounded-lg">
+                <div className="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center">
+                  <span className="text-xl">⚔️</span>
                 </div>
-              ))}
-              {char.milestones.length === 0 && <p className="text-sm text-on-surface-variant/40 italic">暂无里程碑事件</p>}
-            </div>
-          </Card>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{item.name}</p>
+                  <p className="text-xs text-on-surface-variant/60">{item.type}</p>
+                </div>
+                <button className="p-2 text-primary hover:bg-primary/10 rounded-full">
+                  <PenTool className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {items.length === 0 && <p className="text-sm text-on-surface-variant/40 italic">暂无持有物品</p>}
+          </div>
         </div>
+      </div>
+
+      {/* 底部：大事记 */}
+      <div className="bg-surface-container-high rounded-2xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold">大事记</h2>
+          </div>
+          {isEditing && (
+            <button 
+              onClick={() => {
+                const newMilestone = {
+                  year: '',
+                  event: ''
+                };
+                setEditedCharacter({ 
+                  ...editedCharacter, 
+                  milestones: [...editedCharacter.milestones, newMilestone] 
+                });
+              }}
+              className="p-2 text-primary hover:bg-primary/10 rounded-full"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <div className="space-y-4">
+          {isEditing ? (
+            editedCharacter.milestones.map((milestone, index) => (
+              <div key={index} className="flex gap-4 p-3 bg-surface rounded-lg">
+                <div className="w-20 flex-shrink-0">
+                  <input
+                    type="text"
+                    value={milestone.year}
+                    onChange={(e) => {
+                      const newMilestones = [...editedCharacter.milestones];
+                      newMilestones[index] = { ...newMilestones[index], year: e.target.value };
+                      setEditedCharacter({ ...editedCharacter, milestones: newMilestones });
+                    }}
+                    className="w-full px-3 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="年份"
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={milestone.event}
+                    onChange={(e) => {
+                      const newMilestones = [...editedCharacter.milestones];
+                      newMilestones[index] = { ...newMilestones[index], event: e.target.value };
+                      setEditedCharacter({ ...editedCharacter, milestones: newMilestones });
+                    }}
+                    className="w-full px-3 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="事件"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    const newMilestones = editedCharacter.milestones.filter((_, i) => i !== index);
+                    setEditedCharacter({ ...editedCharacter, milestones: newMilestones });
+                  }}
+                  className="p-2 text-error hover:bg-error/10 rounded-full"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))
+          ) : (
+            char.milestones.map((milestone, index) => (
+              <div key={index} className="flex gap-4 p-3 bg-surface rounded-lg">
+                <div className="w-20 flex-shrink-0">
+                  <p className="text-sm font-medium">{milestone.year}</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm">{milestone.event}</p>
+                </div>
+              </div>
+            ))
+          )}
+          {char.milestones.length === 0 && <p className="text-sm text-on-surface-variant/40 italic">暂无大事记</p>}
+        </div>
+      </div>
+
+      {/* 操作按钮 */}
+      <div className="flex justify-end gap-4">
+        <button 
+          onClick={handleShare}
+          className="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors"
+        >
+          <Share2 className="w-4 h-4 inline mr-2" /> 分享
+        </button>
+        <button 
+          onClick={handleEdit}
+          className="px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+        >
+          <Edit3 className="w-4 h-4 inline mr-2" /> 编辑
+        </button>
+        <button 
+          onClick={() => setIsDeleteModalOpen(true)}
+          className="px-4 py-2 text-error hover:bg-error/10 rounded-lg transition-colors"
+        >
+          <Trash2 className="w-4 h-4 inline mr-2" /> 删除
+        </button>
       </div>
 
       {/* Delete Confirmation Modal */}
