@@ -125,11 +125,11 @@ const CharacterDetailView = () => {
     >
       {/* 顶部导航 */}
       <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-2">
-          <Link to="/characters" className="px-4 py-2 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors w-fit">
+        <div className="flex items-center gap-4">
+          <Link to="/characters" className="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
             返回
           </Link>
-          <h1 className="text-2xl font-bold">{char.name}</h1>
         </div>
         <div className="flex items-center gap-2">
           {isEditing && (
@@ -161,22 +161,26 @@ const CharacterDetailView = () => {
           </div>
           
           <div className="space-y-4">
-            {isEditing && (
-              <motion.div 
-                key="edit-name"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <input
-                  type="text"
-                  value={editedCharacter.name}
-                  onChange={(e) => setEditedCharacter({ ...editedCharacter, name: e.target.value })}
-                  className="w-full text-2xl font-bold border-b-2 border-primary outline-none"
-                  placeholder="人物名称"
-                />
-              </motion.div>
-            )}
+            <div>
+              {isEditing ? (
+                <motion.div 
+                  key="edit-name"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <input
+                    type="text"
+                    value={editedCharacter.name}
+                    onChange={(e) => setEditedCharacter({ ...editedCharacter, name: e.target.value })}
+                    className="w-full text-2xl font-bold border-b-2 border-primary outline-none"
+                    placeholder="人物名称"
+                  />
+                </motion.div>
+              ) : (
+                <h1 className="text-2xl font-bold text-center">{char.name}</h1>
+              )}
+            </div>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
