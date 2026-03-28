@@ -123,19 +123,33 @@ const CharacterDetailView = () => {
       animate={{ opacity: 1, x: 0 }} 
       className="space-y-8"
     >
-      {/* 顶部保存按钮 */}
-      <div className="flex justify-end">
-        {isEditing && (
-          <motion.button
-            onClick={handleSave}
-            className="px-6 py-2 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-dim transition-colors"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            保存
-          </motion.button>
-        )}
+      {/* 顶部导航 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/characters" className="px-4 py-2 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors">
+            返回
+          </Link>
+          <h1 className="text-2xl font-bold">{char.name}</h1>
+          {isEditing && (
+            <button 
+              onClick={handleSave}
+              className="p-2 text-primary hover:bg-primary/10 rounded-full"
+            >
+              <Save className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={handleShare} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
+            <Share2 className="w-5 h-5 text-on-surface-variant" />
+          </button>
+          <button onClick={handleEdit} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
+            <Edit3 className="w-5 h-5 text-on-surface-variant" />
+          </button>
+          <button onClick={() => setIsDeleteModalOpen(true)} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
+            <Trash2 className="w-5 h-5 text-on-surface-variant" />
+          </button>
+        </div>
       </div>
 
       {/* 顶部三列布局 */}
@@ -147,23 +161,22 @@ const CharacterDetailView = () => {
           </div>
           
           <div className="space-y-4">
-            <motion.div 
-              key={isEditing ? 'edit-name' : 'view-name'}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {isEditing ? (
+            {isEditing && (
+              <motion.div 
+                key="edit-name"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <input
                   type="text"
                   value={editedCharacter.name}
                   onChange={(e) => setEditedCharacter({ ...editedCharacter, name: e.target.value })}
                   className="w-full text-2xl font-bold border-b-2 border-primary outline-none"
+                  placeholder="人物名称"
                 />
-              ) : (
-                <h1 className="text-2xl font-bold text-center">{char.name}</h1>
-              )}
-            </motion.div>
+              </motion.div>
+            )}
             
             <div className="grid grid-cols-2 gap-4">
               {isEditing ? (
@@ -491,27 +504,7 @@ const CharacterDetailView = () => {
         </div>
       </div>
 
-      {/* 操作按钮 */}
-      <div className="flex justify-end gap-4">
-        <button 
-          onClick={handleShare}
-          className="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors"
-        >
-          <Share2 className="w-4 h-4 inline mr-2" /> 分享
-        </button>
-        <button 
-          onClick={handleEdit}
-          className="px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-        >
-          <Edit3 className="w-4 h-4 inline mr-2" /> 编辑
-        </button>
-        <button 
-          onClick={() => setIsDeleteModalOpen(true)}
-          className="px-4 py-2 text-error hover:bg-error/10 rounded-lg transition-colors"
-        >
-          <Trash2 className="w-4 h-4 inline mr-2" /> 删除
-        </button>
-      </div>
+
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
