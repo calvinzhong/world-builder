@@ -124,12 +124,14 @@ const CharacterDetailView = () => {
       className="space-y-8"
     >
       {/* 顶部导航 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/characters" className="px-4 py-2 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors">
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-2">
+          <Link to="/characters" className="px-4 py-2 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors w-fit">
             返回
           </Link>
           <h1 className="text-2xl font-bold">{char.name}</h1>
+        </div>
+        <div className="flex items-center gap-2">
           {isEditing && (
             <button 
               onClick={handleSave}
@@ -138,8 +140,6 @@ const CharacterDetailView = () => {
               <Save className="w-5 h-5" />
             </button>
           )}
-        </div>
-        <div className="flex items-center gap-2">
           <button onClick={handleShare} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
             <Share2 className="w-5 h-5 text-on-surface-variant" />
           </button>
