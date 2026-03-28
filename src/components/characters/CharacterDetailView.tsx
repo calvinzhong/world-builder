@@ -156,7 +156,7 @@ const CharacterDetailView = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 左侧：头像、姓名、年龄、等级、标签 */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="w-full aspect-square rounded-2xl bg-surface-container-high overflow-hidden shadow-lg">
+          <div className="w-full aspect-square rounded-3xl bg-surface-container-high overflow-hidden shadow-lg">
             <img src={`https://picsum.photos/seed/${char.id}/400/400`} alt={char.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
           
@@ -178,83 +178,85 @@ const CharacterDetailView = () => {
               </motion.div>
             )}
             
-            <div className="grid grid-cols-2 gap-4">
-              {isEditing ? (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-on-surface-variant mb-2">年龄</label>
-                    <input
-                      type="text"
-                      value={editedCharacter.age}
-                      onChange={(e) => setEditedCharacter({ ...editedCharacter, age: e.target.value })}
-                      className="w-full px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-on-surface-variant mb-2">等级</label>
-                    <input
-                      type="text"
-                      value={editedCharacter.level || ''}
-                      onChange={(e) => setEditedCharacter({ ...editedCharacter, level: e.target.value })}
-                      className="w-full px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="p-3 bg-surface-container-low rounded-lg text-center">
-                    <p className="text-sm font-medium">年龄</p>
-                    <p className="text-lg font-bold">{char.age}</p>
-                  </div>
-                  <div className="p-3 bg-surface-container-low rounded-lg text-center">
-                    <p className="text-sm font-medium">等级</p>
-                    <p className="text-lg font-bold">{char.level || 'N/A'}</p>
-                  </div>
-                </>
-              )}
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-on-surface-variant mb-3">标签</label>
-              {isEditing ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {[0, 1, 2, 3, 4, 5].map(i => (
-                    <input
-                      key={i}
-                      type="text"
-                      value={editedCharacter.traits[i] || ''}
-                      onChange={(e) => {
-                        const newTraits = [...editedCharacter.traits];
-                        newTraits[i] = e.target.value;
-                        setEditedCharacter({ ...editedCharacter, traits: newTraits.filter(Boolean) });
-                      }}
-                      className="px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder={`标签${i+1}`}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {char.traits?.map((trait, index) => (
-                    <div key={index} className="p-3 bg-surface-container-low rounded-lg text-center">
-                      <p className="text-sm font-medium">标签{index+1}</p>
-                      <p className="font-bold">{trait}</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {isEditing ? (
+                  <>
+                    <div>
+                      <input
+                        type="text"
+                        value={editedCharacter.age}
+                        onChange={(e) => setEditedCharacter({ ...editedCharacter, age: e.target.value })}
+                        className="w-full px-4 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="年龄"
+                      />
                     </div>
-                  )) || Array(6).fill(0).map((_, i) => (
-                    <div key={i} className="p-3 bg-surface-container-low rounded-lg text-center">
-                      <p className="text-sm font-medium">标签{i+1}</p>
-                      <p className="text-on-surface-variant/40">-</p>
+                    <div>
+                      <input
+                        type="text"
+                        value={editedCharacter.level || ''}
+                        onChange={(e) => setEditedCharacter({ ...editedCharacter, level: e.target.value })}
+                        className="w-full px-4 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="等级"
+                      />
                     </div>
-                  ))}
-                </div>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <div className="p-3 bg-surface-container-low rounded-lg text-center">
+                      <p className="text-sm font-medium text-on-surface-variant">年龄</p>
+                      <p className="text-lg font-bold">{char.age}</p>
+                    </div>
+                    <div className="p-3 bg-surface-container-low rounded-lg text-center">
+                      <p className="text-sm font-medium text-on-surface-variant">等级</p>
+                      <p className="text-lg font-bold">{char.level || 'N/A'}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-on-surface-variant mb-3">标签</p>
+                {isEditing ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {[0, 1, 2, 3, 4, 5].map(i => (
+                      <input
+                        key={i}
+                        type="text"
+                        value={editedCharacter.traits[i] || ''}
+                        onChange={(e) => {
+                          const newTraits = [...editedCharacter.traits];
+                          newTraits[i] = e.target.value;
+                          setEditedCharacter({ ...editedCharacter, traits: newTraits.filter(Boolean) });
+                        }}
+                        className="px-4 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder={`标签${i+1}`}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {char.traits?.map((trait, index) => (
+                      <div key={index} className="p-3 bg-surface-container-low rounded-lg text-center">
+                        <p className="text-sm font-medium text-on-surface-variant">标签{index+1}</p>
+                        <p className="font-bold">{trait}</p>
+                      </div>
+                    )) || Array(3).fill(0).map((_, i) => (
+                      <div key={i} className="p-3 bg-surface-container-low rounded-lg text-center">
+                        <p className="text-sm font-medium text-on-surface-variant">标签{i+1}</p>
+                        <p className="text-on-surface-variant/40">-</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
         
         {/* 中间：简介 */}
         <div className="lg:col-span-1">
-          <div className="h-full bg-surface-container-low rounded-2xl p-6">
+          <div className="h-full bg-surface-container-low rounded-3xl p-6">
             <h2 className="text-lg font-bold mb-4">简介</h2>
             {isEditing ? (
               <textarea
@@ -271,11 +273,11 @@ const CharacterDetailView = () => {
         
         {/* 右侧：力量体系、武力值雷达图 */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-surface-container-low rounded-2xl p-6">
+          <div className="bg-surface-container-low rounded-3xl p-6">
             <h2 className="text-lg font-bold mb-4">力量体系</h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {['修为境界', '灵力质量', '神魂强度', '肉身强度', '功法神通', '法宝外物', '心性机缘'].map((item, index) => (
-                <div key={index} className="flex justify-between items-center p-2 bg-surface rounded-lg">
+                <div key={index} className="flex justify-between items-center">
                   <span className="text-sm">{index+1}. {item}</span>
                   {isEditing ? (
                     <input
@@ -288,7 +290,7 @@ const CharacterDetailView = () => {
                         newPowerStats[item] = parseInt(e.target.value);
                         setEditedCharacter({ ...editedCharacter, powerStats: newPowerStats });
                       }}
-                      className="w-24"
+                      className="w-32 mx-4"
                     />
                   ) : (
                     <span className="text-sm font-medium">{char.powerStats?.[item] || 50}</span>
@@ -298,7 +300,7 @@ const CharacterDetailView = () => {
             </div>
           </div>
           
-          <div className="bg-surface-container-low rounded-2xl p-6">
+          <div className="bg-surface-container-low rounded-3xl p-6">
             <h2 className="text-lg font-bold mb-4">武力值雷达图</h2>
             <div className="aspect-square flex items-center justify-center">
               <div className="text-on-surface-variant/40 text-sm">雷达图占位</div>
@@ -310,7 +312,7 @@ const CharacterDetailView = () => {
       {/* 中间三列布局：羁绊关系、所属势力、持有物品 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 羁绊关系 */}
-        <div className="bg-surface-container-high rounded-2xl p-6">
+        <div className="bg-surface-container-low rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
@@ -360,7 +362,7 @@ const CharacterDetailView = () => {
         </div>
         
         {/* 所属势力 */}
-        <div className="bg-surface-container-high rounded-2xl p-6">
+        <div className="bg-surface-container-low rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
@@ -392,7 +394,7 @@ const CharacterDetailView = () => {
         </div>
         
         {/* 持有物品 */}
-        <div className="bg-surface-container-high rounded-2xl p-6">
+        <div className="bg-surface-container-low rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <Sword className="w-5 h-5 text-primary" />
@@ -423,7 +425,7 @@ const CharacterDetailView = () => {
       </div>
 
       {/* 底部：大事记 */}
-      <div className="bg-surface-container-high rounded-2xl p-6">
+      <div className="bg-surface-container-low rounded-3xl p-6">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" />
@@ -460,7 +462,7 @@ const CharacterDetailView = () => {
                       newMilestones[index] = { ...newMilestones[index], year: e.target.value };
                       setEditedCharacter({ ...editedCharacter, milestones: newMilestones });
                     }}
-                    className="w-full px-3 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="年份"
                   />
                 </div>
@@ -473,7 +475,7 @@ const CharacterDetailView = () => {
                       newMilestones[index] = { ...newMilestones[index], event: e.target.value };
                       setEditedCharacter({ ...editedCharacter, milestones: newMilestones });
                     }}
-                    className="w-full px-3 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="事件"
                   />
                 </div>
