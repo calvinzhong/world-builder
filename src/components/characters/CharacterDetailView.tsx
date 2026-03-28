@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
-import { Edit3, Share2, Trash2, Users, Calendar, Link as LinkIcon, Zap, Save } from 'lucide-react';
+import { Edit3, Share2, Trash2, Users, Calendar, Link as LinkIcon, Zap, Save, Plus, PenTool, Sword, Search, X } from 'lucide-react';
 import { useWorld } from '../../App';
 import { Card, Badge } from '../../App';
 
@@ -22,6 +22,14 @@ const CharacterDetailView = () => {
   });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isRelationshipModalOpen, setIsRelationshipModalOpen] = useState(false);
+  const [selectedBond, setSelectedBond] = useState({
+    characterId: '',
+    type: '',
+    friendlyValue: 50,
+    hostileValue: 0
+  });
+  const [searchQuery, setSearchQuery] = useState('');
   
   if (!char) return <div>Character not found</div>;
   
@@ -67,6 +75,46 @@ const CharacterDetailView = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
       setIsShareModalOpen(true);
     });
+  };
+
+  const handleEditRelationship = (bond) => {
+    setSelectedBond({
+      characterId: bond.characterId,
+      type: bond.type,
+      friendlyValue: bond.friendlyValue || 50,
+      hostileValue: bond.hostileValue || 0
+    });
+    setIsRelationshipModalOpen(true);
+  };
+
+  const handleSaveRelationship = () => {
+    if (!selectedBond.characterId) return;
+    
+    setWorld(prevWorld => {
+      const newCharacters = prevWorld.characters.map(c => {
+        if (c.id === id) {
+          const bondExists = c.bonds.some(bond => bond.characterId === selectedBond.characterId);
+          let newBonds;
+          
+          if (bondExists) {
+            // 更新现有关系
+            newBonds = c.bonds.map(bond => 
+              bond.characterId === selectedBond.characterId 
+                ? selectedBond 
+                : bond
+            );
+          } else {
+            // 添加新关系
+            newBonds = [...c.bonds, selectedBond];
+          }
+          
+          return { ...c, bonds: newBonds };
+        }
+        return c;
+      });
+      return { ...prevWorld, characters: newCharacters };
+    });
+    setIsRelationshipModalOpen(false);
   };
 
   return (
@@ -206,6 +254,21 @@ const CharacterDetailView = () => {
         <div className="lg:col-span-1 space-y-8">
           <Card title="羁绊关系 SOCIAL BONDS">
             <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  羁绊关系
+                </h3>
+                <button 
+                  onClick={() => {
+                    setSelectedBond({ characterId: '', type: '', friendlyValue: 50, hostileValue: 0 });
+                    setIsRelationshipModalOpen(true);
+                  }}
+                  className="p-2 text-primary hover:bg-primary/10 rounded-full"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
               <motion.div
                 key={isEditing ? 'edit-bonds' : 'view-bonds'}
                 initial={{ opacity: 0, y: 10 }}
@@ -277,19 +340,24 @@ const CharacterDetailView = () => {
                   char.bonds.map(bond => {
                     const target = world.characters.find(c => c.id === bond.characterId);
                     return (
-                      <div key={bond.characterId} className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                      <div key={bond.characterId} className="flex items-center gap-4 p-3 bg-surface rounded-lg">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden">
                           <img src={`https://picsum.photos/seed/${bond.characterId}/100/100`} alt={target?.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
                         <div className="flex-1">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-bold text-sm">{target?.name}</span>
-                            <span className="text-sm font-bold text-primary">{bond.value}</span>
-                          </div>
-                          <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
-                            <div className="h-full bg-primary transition-all" style={{ width: `${bond.value}%` }} />
-                          </div>
-                          <p className="text-xs text-on-surface-variant/60 mt-1">{bond.type}</p>
+                          <p className="text-sm font-medium">{target?.name}</p>
+                          <p className="text-xs text-on-surface-variant/60">{bond.type}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => handleEditRelationship(bond)}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-full"
+                          >
+                            <PenTool className="w-4 h-4" />
+                          </button>
+                          <button className="p-2 text-error hover:bg-error/10 rounded-full">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     );
@@ -432,6 +500,244 @@ const CharacterDetailView = () => {
               >
                 确定
               </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Relationship Edit Modal */}
+      {isRelationshipModalOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            className="bg-surface rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-8"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">编辑羁绊关系</h2>
+              <button 
+                onClick={() => setIsRelationshipModalOpen(false)}
+                className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* 目标角色 */}
+              <div className="flex items-center gap-4">
+                <div className="w-1/3">
+                  <label className="block text-sm font-medium text-on-surface-variant mb-2">目标角色</label>
+                </div>
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="搜索角色..."
+                      className="w-full px-4 py-2 pl-10 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant/40 w-4 h-4" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-4">
+                    {world.characters
+                      .filter(c => c.id !== id && c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .slice(0, 6)
+                      .map(character => (
+                        <div
+                          key={character.id}
+                          className={`p-3 bg-surface-container-low rounded-lg cursor-pointer transition-colors ${selectedBond.characterId === character.id ? 'ring-2 ring-primary' : 'hover:bg-surface-container-high'}`}
+                          onClick={() => setSelectedBond({ ...selectedBond, characterId: character.id })}
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden mx-auto mb-2">
+                            <img src={`https://picsum.photos/seed/${character.id}/100/100`} alt={character.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                          <p className="text-center text-sm font-medium">{character.name}</p>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              </div>
+
+              {/* 关系类型 */}
+              <div className="flex items-center gap-4">
+                <div className="w-1/3">
+                  <label className="block text-sm font-medium text-on-surface-variant mb-2">关系类型</label>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={selectedBond.type}
+                    onChange={(e) => setSelectedBond({ ...selectedBond, type: e.target.value })}
+                    placeholder="例如：朋友、敌人、家人..."
+                    className="w-full px-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              {/* 友好值和仇恨值 */}
+              <div>
+                <label className="block text-sm font-medium text-on-surface-variant mb-3">关系值</label>
+                <div className="bg-surface-container-low rounded-xl p-4 space-y-6">
+                  {/* 友好值 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">💫</span>
+                        <span className="font-medium text-green-600">友好值</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold">{selectedBond.friendlyValue}</span>
+                        <span className="text-sm text-on-surface-variant/60">/100</span>
+                      </div>
+                    </div>
+                    {/* 滑块 */}
+                    <div className="w-full relative">
+                      {/* 背景条 */}
+                      <div 
+                        className="w-full h-2 bg-surface-container rounded-full"
+                        style={{
+                          background: `linear-gradient(to right, #e2e8f0 0%, #e2e8f0 ${selectedBond.friendlyValue}%, #4ade80 ${selectedBond.friendlyValue}%, #4ade80 100%)`
+                        }}
+                      ></div>
+                      {/* 滑块 */}
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={selectedBond.friendlyValue}
+                        onChange={(e) => setSelectedBond({ ...selectedBond, friendlyValue: parseInt(e.target.value) })}
+                        className="w-full h-8 bg-transparent appearance-none cursor-pointer absolute top-0 left-0"
+                        style={{
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'none',
+                          appearance: 'none'
+                        }}
+                      />
+                      <style>
+                        {`
+                          input[type="range"]::-webkit-slider-runnable-track {
+                            width: 100%;
+                            height: 8px;
+                            cursor: pointer;
+                            background: #e2e8f0;
+                            border-radius: 4px;
+                          }
+                          input[type="range"]::-webkit-slider-thumb {
+                            -webkit-appearance: none;
+                            appearance: none;
+                            width: 16px;
+                            height: 16px;
+                            cursor: pointer;
+                            background: #333;
+                            border-radius: 50%;
+                            margin-top: -4px;
+                          }
+                          input[type="range"]::-moz-range-track {
+                            width: 100%;
+                            height: 8px;
+                            cursor: pointer;
+                            background: #e2e8f0;
+                            border-radius: 4px;
+                          }
+                          input[type="range"]::-moz-range-thumb {
+                            width: 16px;
+                            height: 16px;
+                            cursor: pointer;
+                            background: #333;
+                            border-radius: 50%;
+                            border: none;
+                          }
+                        `}
+                      </style>
+                    </div>
+                    <div className="flex justify-between text-xs text-on-surface-variant/40 mt-2">
+                      <span>疏离</span>
+                      <span>生死相依</span>
+                    </div>
+                  </div>
+                  
+                  {/* 仇恨值 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">⚔️</span>
+                        <span className="font-medium text-red-600">仇恨值</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold">{selectedBond.hostileValue}</span>
+                        <span className="text-sm text-on-surface-variant/60">/100</span>
+                      </div>
+                    </div>
+                    {/* 滑块 */}
+                    <div className="w-full relative">
+                      {/* 背景条 */}
+                      <div 
+                        className="w-full h-2 bg-surface-container rounded-full"
+                        style={{
+                          background: `linear-gradient(to right, #e2e8f0 0%, #e2e8f0 ${selectedBond.hostileValue}%, #f87171 ${selectedBond.hostileValue}%, #f87171 100%)`
+                        }}
+                      ></div>
+                      {/* 滑块 */}
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={selectedBond.hostileValue}
+                        onChange={(e) => setSelectedBond({ ...selectedBond, hostileValue: parseInt(e.target.value) })}
+                        className="w-full h-8 bg-transparent appearance-none cursor-pointer absolute top-0 left-0"
+                        style={{
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'none',
+                          appearance: 'none'
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-on-surface-variant/40 mt-2">
+                      <span>无仇恨</span>
+                      <span>不死不休</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 摘要预览 */}
+              <div>
+                <label className="block text-sm font-medium text-on-surface-variant mb-3">摘要预览</label>
+                <div className="p-4 bg-surface-container-low rounded-xl">
+                  <p className="text-sm">
+                    {char.name} 与 
+                    {world.characters.find(c => c.id === selectedBond.characterId)?.name || '目标角色'} 
+                    是{selectedBond.type}关系，
+                    友好值为{selectedBond.friendlyValue}，
+                    仇恨值为{selectedBond.hostileValue}。
+                  </p>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex gap-4 justify-end pt-4 border-t border-outline-variant/30">
+                <button 
+                  onClick={() => setIsRelationshipModalOpen(false)}
+                  className="px-6 py-3 rounded-lg border border-outline-variant/50 font-medium hover:bg-surface-container-low transition-colors"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={handleSaveRelationship}
+                  className="px-6 py-3 rounded-lg bg-primary text-on-primary font-medium hover:bg-primary-dim transition-colors"
+                >
+                  保存
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
