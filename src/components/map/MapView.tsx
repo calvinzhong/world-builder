@@ -369,7 +369,14 @@ const MapView: React.FC = () => {
       </div>
 
       {showMarkerModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowMarkerModal(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">添加标记点</h3>
             <div className="space-y-4">
@@ -450,7 +457,14 @@ const MapView: React.FC = () => {
       )}
 
       {showRouteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowRouteModal(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">绘制路线</h3>
             <div className="space-y-4">

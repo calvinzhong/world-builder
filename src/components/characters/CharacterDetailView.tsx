@@ -6,10 +6,16 @@ import {
   Zap, Save, Plus, PenTool, Sword, Search, X, ArrowLeft, 
   User, Star, Shield, Crown, Heart, Sparkles, BookOpen,
   Home, Users, Handshake, GraduationCap, Swords, Target,
-  Frown, Skull, Trophy, UserX, Briefcase, UserCog
+  Frown, Skull, Trophy, UserX, Briefcase, UserCog,
+  Home as HomeIcon, Users as Users2, Heart as HeartFill, Sword as SwordIcon,
+  Handshake as HandshakeIcon, Frown as FrownIcon, Skull as SkullIcon,
+  Target as TargetIcon, UserX as UserMinus, User as UserIcon,
+  Briefcase as BriefcaseIcon, UserCog as UserSettings,
+  Crown as CrownIcon, Sparkles as SparklesIcon
 } from 'lucide-react';
 import { useWorld } from '../../App';
 import { Card, Badge } from '../../App';
+import { AvatarPreview } from '../AvatarPreview';
 
 const CharacterDetailView = () => {
   const { id } = useParams();
@@ -36,7 +42,8 @@ const CharacterDetailView = () => {
     hostileValue: 0
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('power');
+  const [avatarPreview, setAvatarPreview] = useState<{ isOpen: boolean; imageUrl: string; alt?: string }>({ isOpen: false, imageUrl: '' });
   
   if (!char) return <div>Character not found</div>;
   
@@ -168,28 +175,72 @@ const CharacterDetailView = () => {
       animate={{ opacity: 1, y: 0 }} 
       className="space-y-6"
     >
-      {/* 返回按钮 */}
-      <div className="flex items-center gap-2">
-        <Link 
-          to="/characters" 
-          className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors"
+      {/* Header - 与势力详情页保持一致 */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-surface-container-low transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">返回</span>
-        </Link>
+          <ArrowLeft className="w-5 h-5 text-on-surface-variant" />
+        </button>
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <button 
+                onClick={handleSave}
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-surface-container-low transition-colors"
+              >
+                <Save className="w-5 h-5 text-primary" />
+              </button>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-surface-container-low transition-colors"
+              >
+                <X className="w-5 h-5 text-on-surface-variant" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={handleEdit}
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-surface-container-low transition-colors"
+              >
+                <Edit3 className="w-5 h-5 text-on-surface-variant" />
+              </button>
+              <button 
+                onClick={handleShare}
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-surface-container-low transition-colors"
+              >
+                <Share2 className="w-5 h-5 text-on-surface-variant" />
+              </button>
+              <button 
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-surface-container-low transition-colors"
+              >
+                <Trash2 className="w-5 h-5 text-on-surface-variant" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         <div className="flex items-start gap-8">
-          <div className="w-24 h-24 rounded-2xl bg-surface-container-high overflow-hidden ring-4 ring-primary/10">
-            <img 
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${char.id}`} 
-              alt={char.name} 
-              className="w-full h-full object-cover" 
-              referrerPolicy="no-referrer" 
-            />
-          </div>
+            <div 
+              className="w-32 h-32 rounded-2xl bg-surface-container-high overflow-hidden ring-4 ring-primary/10 flex-shrink-0 cursor-pointer"
+              onClick={() => {
+                const avatarUrl = world.avatarConfigs.find(config => config.id === char.avatarConfigId)?.baseUrl || 'https://api.dicebear.com/7.x/lorelei/svg';
+                setAvatarPreview({ isOpen: true, imageUrl: avatarUrl, alt: char.name });
+              }}
+            >
+              <img 
+                src={`${world.avatarConfigs.find(config => config.id === char.avatarConfigId)?.baseUrl || 'https://api.dicebear.com/7.x/lorelei/svg'}`} 
+                alt={char.name} 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer" 
+              />
+            </div>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               {isEditing ? (
@@ -203,70 +254,42 @@ const CharacterDetailView = () => {
               ) : (
                 <h1 className="text-4xl font-bold">{char.name}</h1>
               )}
-              <div className="flex items-center gap-2">
-                {isEditing ? (
-                  <>
-                    <button 
-                      onClick={handleSave}
-                      className="p-2 rounded-full hover:bg-surface-container-low transition-colors"
-                    >
-                      <Save className="w-5 h-5 text-primary" />
-                    </button>
-                    <button 
-                      onClick={() => setIsEditing(false)}
-                      className="p-2 rounded-full hover:bg-surface-container-low transition-colors"
-                    >
-                      <X className="w-5 h-5 text-on-surface-variant" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button 
-                      onClick={handleEdit}
-                      className="p-2 rounded-full hover:bg-surface-container-low transition-colors"
-                    >
-                      <Edit3 className="w-5 h-5 text-on-surface-variant" />
-                    </button>
-                    <button 
-                      onClick={handleShare}
-                      className="p-2 rounded-full hover:bg-surface-container-low transition-colors"
-                    >
-                      <Share2 className="w-5 h-5 text-on-surface-variant" />
-                    </button>
-                    <button 
-                      onClick={() => setIsDeleteModalOpen(true)}
-                      className="p-2 rounded-full hover:bg-surface-container-low transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5 text-on-surface-variant" />
-                    </button>
-                  </>
-                )}
-              </div>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Badge color="bg-surface-container-high text-on-surface-variant">
-                <Calendar className="w-3 h-3 mr-1" />
-                年龄: {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedCharacter.age}
-                    onChange={(e) => setEditedCharacter({ ...editedCharacter, age: e.target.value })}
-                    className="w-16 bg-transparent outline-none"
-                    placeholder="年龄"
-                  />
-                ) : char.age}
-              </Badge>
+            <div className="flex flex-wrap items-center gap-6 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-surface-container-low flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-3 h-3 text-on-surface-variant" />
+                </div>
+                <span className="text-sm text-on-surface-variant/70">年龄</span>
+                <span className="font-medium">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedCharacter.age}
+                      onChange={(e) => setEditedCharacter({ ...editedCharacter, age: e.target.value })}
+                      className="w-16 bg-transparent outline-none"
+                      placeholder="年龄"
+                    />
+                  ) : char.age}
+                </span>
+              </div>
               {factions.map(faction => (
-                <Badge key={faction.id}>
-                  <Shield className="w-3 h-3 mr-1" />
-                  {faction.name}
-                </Badge>
+                <div key={faction.id} className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-surface-container-low flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-3 h-3 text-on-surface-variant" />
+                  </div>
+                  <span className="text-sm text-on-surface-variant/70">所属势力</span>
+                  <span className="font-medium">{faction.name}</span>
+                </div>
               ))}
-              <Badge color="bg-surface-container-high text-on-surface-variant">
-                <Sword className="w-3 h-3 mr-1" />
-                {items.length} 件物品
-              </Badge>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-surface-container-low flex items-center justify-center flex-shrink-0">
+                  <Sword className="w-3 h-3 text-on-surface-variant" />
+                </div>
+                <span className="text-sm text-on-surface-variant/70">持有物品</span>
+                <span className="font-medium">{items.length} 件物品</span>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -302,11 +325,30 @@ const CharacterDetailView = () => {
         </div>
       </div>
 
+      {/* 人物简介 */}
+      <Card>
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-bold">人物简介</h2>
+        </div>
+        {isEditing ? (
+          <textarea
+            value={editedCharacter.bio}
+            onChange={(e) => setEditedCharacter({ ...editedCharacter, bio: e.target.value })}
+            className="w-full h-48 px-4 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
+            placeholder="人物简介"
+          />
+        ) : (
+          <p className="text-on-surface-variant/80 leading-relaxed">
+            {char.bio || '暂无简介。点击编辑按钮添加人物背景故事、性格特点、经历等信息。'}
+          </p>
+        )}
+      </Card>
+
       {/* Tab Navigation */}
       <div className="border-b border-outline-variant/30">
         <div className="flex gap-6">
           {[
-            { id: 'overview', label: '简介', icon: User },
             { id: 'power', label: '力量体系', icon: Zap },
             { id: 'relationships', label: '羁绊关系', icon: Heart },
             { id: 'factions', label: '所属势力', icon: Shield },
@@ -331,34 +373,6 @@ const CharacterDetailView = () => {
 
       {/* Content */}
       <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <BookOpen className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-bold">人物简介</h2>
-              </div>
-              {isEditing ? (
-                <textarea
-                  value={editedCharacter.bio}
-                  onChange={(e) => setEditedCharacter({ ...editedCharacter, bio: e.target.value })}
-                  className="w-full h-48 px-4 py-3 bg-surface-container-low rounded-lg border border-outline-variant/50 focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
-                  placeholder="人物简介"
-                />
-              ) : (
-                <p className="text-on-surface-variant/80 leading-relaxed">
-                  {char.bio || '暂无简介。点击编辑按钮添加人物背景故事、性格特点、经历等信息。'}
-                </p>
-              )}
-            </Card>
-          </motion.div>
-        )}
 
         {activeTab === 'power' && (
           <motion.div
@@ -464,9 +478,9 @@ const CharacterDetailView = () => {
                         key={bond.characterId}
                         className="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors group"
                       >
-                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 ring-4 ring-primary/5">
                           <img 
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${bond.characterId}`} 
+                            src={`${world.avatarConfigs.find(config => config.id === target?.avatarConfigId)?.baseUrl || 'https://api.dicebear.com/7.x/lorelei/svg'}`} 
                             alt={target?.name} 
                             className="w-full h-full object-cover" 
                             referrerPolicy="no-referrer" 
@@ -530,16 +544,22 @@ const CharacterDetailView = () => {
                     key={faction.id}
                     className="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors group"
                   >
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg font-bold text-primary">{faction.name.charAt(0)}</span>
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 ring-4 ring-primary/5">
+                      <span className="text-xl font-bold text-primary">{faction.name.charAt(0)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-on-surface truncate">{faction.name}</p>
                       <p className="text-sm text-on-surface-variant">势力成员</p>
+                      <div className="flex gap-3 mt-1 text-xs text-on-surface-variant/60">
+                        <span>成员: {world.characters.filter(c => c.factionId === faction.id || c.factionIds?.includes(faction.id)).length}</span>
+                      </div>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button className="p-1.5 rounded hover:bg-surface-container-lowest transition-colors">
                         <PenTool className="w-3.5 h-3.5 text-on-surface-variant" />
+                      </button>
+                      <button className="p-1.5 rounded hover:bg-surface-container-lowest transition-colors">
+                        <Trash2 className="w-3.5 h-3.5 text-on-surface-variant" />
                       </button>
                     </div>
                   </div>
@@ -755,6 +775,11 @@ const CharacterDetailView = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsShareModalOpen(false);
+            }
+          }}
         >
           <motion.div 
             initial={{ scale: 0.9, y: 20 }}
@@ -824,7 +849,7 @@ const CharacterDetailView = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* 左侧：目标人物选择 */}
-              <div>
+              <div className="flex flex-col">
                 <div className="flex justify-between items-center mb-3">
                   <label className="block text-sm font-medium text-on-surface-variant">目标人物</label>
                   <div className="relative">
@@ -838,7 +863,7 @@ const CharacterDetailView = () => {
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-on-surface-variant/40 w-3 h-3" />
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-2 max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
+                <div className="flex-1 grid grid-cols-4 gap-2 max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
                   {world.characters
                     .filter(c => c.id !== id && c.name.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map(character => (
@@ -851,8 +876,20 @@ const CharacterDetailView = () => {
                         }`}
                         onClick={() => setSelectedBond({ ...selectedBond, characterId: character.id })}
                       >
-                        <div className="w-10 h-10 rounded-lg overflow-hidden mx-auto mb-1">
-                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${character.id}`} alt={character.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <div 
+                          className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-2 ring-4 ring-primary/5 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const avatarUrl = world.avatarConfigs.find(config => config.id === character.avatarConfigId)?.baseUrl || 'https://api.dicebear.com/7.x/lorelei/svg';
+                            setAvatarPreview({ isOpen: true, imageUrl: avatarUrl, alt: character.name });
+                          }}
+                        >
+                          <img 
+                            src={`${world.avatarConfigs.find(config => config.id === character.avatarConfigId)?.baseUrl || 'https://api.dicebear.com/7.x/lorelei/svg'}`} 
+                            alt={character.name} 
+                            className="w-full h-full object-cover" 
+                            referrerPolicy="no-referrer" 
+                          />
                         </div>
                         <p className="text-center text-xs font-medium text-on-surface truncate">{character.name}</p>
                       </div>
@@ -862,38 +899,51 @@ const CharacterDetailView = () => {
               </div>
 
               {/* 右侧：关系类型选择 */}
-              <div>
-                <label className="block text-sm font-medium text-on-surface-variant mb-3">关系类型</label>
-                <div className="grid grid-cols-3 gap-2 max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-on-surface-variant">关系类型</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="搜索..."
+                      className="w-40 px-2 py-1.5 pl-7 text-xs bg-surface-container-low rounded border border-outline-variant/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-on-surface-variant/40 w-3 h-3" />
+                  </div>
+                </div>
+                <div className="flex-1 grid grid-cols-4 gap-2 max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
                   {[
-                    { id: '家人', Icon: Home, color: 'bg-red-100 text-red-700' },
-                    { id: '朋友', Icon: Users, color: 'bg-blue-100 text-blue-700' },
-                    { id: '恋人', Icon: Heart, color: 'bg-pink-100 text-pink-700' },
-                    { id: '师徒', Icon: GraduationCap, color: 'bg-amber-100 text-amber-700' },
-                    { id: '战友', Icon: Swords, color: 'bg-slate-100 text-slate-700' },
-                    { id: '盟友', Icon: Handshake, color: 'bg-green-100 text-green-700' },
-                    { id: '敌人', Icon: Frown, color: 'bg-red-200 text-red-800' },
-                    { id: '仇人', Icon: Skull, color: 'bg-gray-200 text-gray-800' },
-                    { id: '竞争对手', Icon: Target, color: 'bg-orange-100 text-orange-700' },
-                    { id: '陌生人', Icon: UserX, color: 'bg-gray-100 text-gray-600' },
-                    { id: '熟人', Icon: User, color: 'bg-cyan-100 text-cyan-700' },
-                    { id: '上下级', Icon: Briefcase, color: 'bg-indigo-100 text-indigo-700' },
-                    { id: '主仆', Icon: Crown, color: 'bg-purple-100 text-purple-700' },
-                    { id: '其他', Icon: Sparkles, color: 'bg-gray-100 text-gray-500' }
-                  ].map(type => (
+                    { id: '家人', Icon: HomeIcon, color: 'text-primary' },
+                    { id: '朋友', Icon: Users2, color: 'text-primary' },
+                    { id: '恋人', Icon: HeartFill, color: 'text-primary' },
+                    { id: '师徒', Icon: GraduationCap, color: 'text-primary' },
+                    { id: '战友', Icon: Swords, color: 'text-primary' },
+                    { id: '盟友', Icon: HandshakeIcon, color: 'text-primary' },
+                    { id: '敌人', Icon: FrownIcon, color: 'text-primary' },
+                    { id: '仇人', Icon: SkullIcon, color: 'text-primary' },
+                    { id: '竞争对手', Icon: TargetIcon, color: 'text-primary' },
+                    { id: '陌生人', Icon: UserMinus, color: 'text-primary' },
+                    { id: '熟人', Icon: UserIcon, color: 'text-primary' },
+                    { id: '上下级', Icon: BriefcaseIcon, color: 'text-primary' },
+                    { id: '同事', Icon: UserSettings, color: 'text-primary' },
+                    { id: '主仆', Icon: CrownIcon, color: 'text-primary' },
+                    { id: '其他', Icon: SparklesIcon, color: 'text-primary' }
+                  ].filter(type => type.id.toLowerCase().includes(searchQuery.toLowerCase())).map(type => (
                     <div
                       key={type.id}
-                      className={`p-3 bg-surface-container-low rounded-lg cursor-pointer transition-all border-2 text-center ${
+                      className={`p-2 bg-surface-container-low rounded-lg cursor-pointer transition-all border-2 text-center ${
                         selectedBond.type === type.id 
                           ? 'border-primary bg-primary/5' 
                           : 'border-transparent hover:border-outline-variant'
                       }`}
                       onClick={() => setSelectedBond({ ...selectedBond, type: type.id })}
                     >
-                      <div className={`w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center ${type.color}`}>
-                        <type.Icon className="w-4 h-4" />
+                      <div className="w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <type.Icon className="w-8 h-8" />
                       </div>
-                      <p className="text-center text-xs font-medium text-on-surface">{type.id}</p>
+                      <p className="text-center text-xs font-medium text-on-surface truncate">{type.id}</p>
                     </div>
                   ))}
                 </div>
@@ -968,6 +1018,13 @@ const CharacterDetailView = () => {
           </motion.div>
         </motion.div>
       )}
+
+      <AvatarPreview
+        isOpen={avatarPreview.isOpen}
+        onClose={() => setAvatarPreview({ isOpen: false, imageUrl: '' })}
+        imageUrl={avatarPreview.imageUrl}
+        alt={avatarPreview.alt}
+      />
     </motion.div>
   );
 };

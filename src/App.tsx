@@ -31,15 +31,14 @@ import {
   Target,
   Share2,
   PieChart,
-  MessageSquare,
-  Sun,
-  Moon
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import CharactersView from './components/characters/CharactersView';
 import CharacterDetailView from './components/characters/CharacterDetailView';
+import CharacterConfigView from './components/characters/CharacterConfigView';
 import EraDetailView from './components/eras/EraDetailView';
 import NewSettingView from './components/settings/NewSettingView';
 import PowerSystemDetailView from './components/powers/PowerSystemDetailView';
@@ -51,7 +50,6 @@ import MapView from './components/map/MapView';
 import NovelView from './components/novel/NovelView';
 import ChapterManagementView from './components/novel/ChapterManagementView';
 import UserDetailView from './components/UserDetailView';
-import ThemeTestView from './components/ThemeTestView';
 import useTranslation from './i18n/useTranslation';
 
 // --- Types ---
@@ -95,18 +93,24 @@ interface Milestone {
 interface Bond {
   characterId: string;
   type: string;
-  value: number; // 0-100
+  friendlyValue: number;
+  hostileValue: number;
 }
 
 interface Character {
   id: string;
   name: string;
   age: string;
+  gender?: 'male' | 'female';
+  avatarConfigId?: string;
   traits: string[];
   milestones: Milestone[];
   bonds: Bond[];
+  factionId?: string;
   factionIds?: string[];
   itemIds: string[];
+  bio?: string;
+  powerStats?: { [key: string]: number };
 }
 
 interface Item {
@@ -115,6 +119,9 @@ interface Item {
   description: string;
   type: string;
   powerSystemId?: string;
+  rarity?: string;
+  origin?: string;
+  attributes?: { name: string; value: string }[];
 }
 
 interface PowerSystem {
@@ -190,6 +197,12 @@ interface Currency {
   }[];
 }
 
+interface AvatarConfig {
+  id: string;
+  name: string;
+  baseUrl: string;
+}
+
 interface World {
   id: string;
   name: string;
@@ -210,6 +223,9 @@ interface World {
     todayWords: number;
     consecutiveDays: number;
   };
+  characterTags: string[];
+  bondTypes: string[];
+  avatarConfigs: AvatarConfig[];
 }
 
 // --- Context ---
@@ -239,233 +255,45 @@ const INITIAL_WORLD: World = {
   ],
   timeline: [
     { id: 't1', year: '1024 AE', title: '以太引擎发明', description: '阿基米德·索恩发明了第一台以太引擎，开启了浮空时代。' },
-    { id: 't2', year: '1550 AE', title: '迷雾战争', description: '各大浮空岛屿为了争夺高空以太资源爆发了长达五十年的战争。' },
-    { id: 't3', year: '2000 AE', title: '神秘传承', description: '在青云山脉深处，少年林默意外发现了一座古老的洞府，里面藏有上古修士的传承。他获得了《青云诀》修炼心法和一把锈迹斑斑的铁剑。' },
-    { id: 't4', year: '2001 AE', title: '加入宗派', description: '凭借传承的力量，林默通过了青云门的入门测试，成为外门弟子。在这里，他结识了大师兄张远和小师妹柳月，三人成为好友。' },
-    { id: 't5', year: '2002 AE', title: '初次挑战', description: '外门弟子考核中，林默遇到了来自敌对势力玄铁门的弟子王虎的挑衅。虽然实力悬殊，但林默凭借传承中的剑术勉强获胜，引起了内门长老的注意。' },
-    { id: 't6', year: '2003 AE', title: '法宝认主', description: '在宗门宝库中，那把锈剑突然发光，认林默为主，原来是上古神器"青冥剑"。同时，他获得了第一件防御法宝"玄龟盾"。' },
-    { id: 't7', year: '2004 AE', title: '宗派大比', description: '林默在宗门大比中一路过关斩将，最终与大师兄张远对决。虽然惜败，但他的表现获得了掌门的赏识，被破格提升为内门弟子。' },
-    { id: 't8', year: '2005 AE', title: '神秘预言', description: '林默在修炼时偶然触发了青冥剑中的记忆碎片，得知一个关于"魔劫将至"的预言，而他可能是预言中的关键人物。' },
-    { id: 't9', year: '2006 AE', title: '魔修入侵', description: '玄铁门突然与魔修勾结，袭击青云门。林默与张远、柳月并肩作战，却发现王虎已堕入魔道，成为魔修的爪牙。' },
-    { id: 't10', year: '2007 AE', title: '寻找线索', description: '为了对抗魔修，林默前往古老的藏书阁寻找线索，发现魔劫的根源与千年前的一场大战有关，而青冥剑的前主人正是当时的关键人物。' },
-    { id: 't11', year: '2008 AE', title: '艰难抉择', description: '林默得知要阻止魔劫，需要牺牲自己的修为甚至生命。同时，他发现柳月竟是魔修首领的女儿，但她选择站在正义一边。' },
-    { id: 't12', year: '2009 AE', title: '最终决战', description: '林默与魔修首领展开最终决战。在关键时刻，青冥剑爆发全部力量，柳月牺牲自己为林默挡下致命一击，最终林默成功封印了魔修首领，阻止了魔劫，但自己也陷入了沉睡。' }
+    { id: 't2', year: '1550 AE', title: '迷雾战争', description: '各大浮空岛屿为了争夺高空以太资源爆发了长达五十年的战争。' }
   ],
   maps: [],
 
   factions: [
-    { id: 'f1', name: '以太议会', description: '管理所有浮空岛屿以太分配的最高机构。', relationships: [{ factionId: 'f2', type: 'hostile' }, { factionId: 'f4', type: 'neutral' }], level: 5 },
-    { id: 'f2', name: '深渊教团', description: '崇拜迷雾深处古神的秘密组织。', relationships: [{ factionId: 'f1', type: 'hostile' }, { factionId: 'f3', type: 'ally' }], level: 4 },
-    { id: 'f3', name: '星界商会', description: '掌控星际贸易的商业联盟，游走于各个势力之间。', relationships: [{ factionId: 'f2', type: 'ally' }, { factionId: 'f1', type: 'neutral' }], level: 3 },
-    { id: 'f4', name: '浮空骑士团', description: '守护浮空岛屿的军事组织，以荣誉和正义为准则。', relationships: [{ factionId: 'f1', type: 'neutral' }, { factionId: 'f5', type: 'hostile' }], level: 4 },
-    { id: 'f5', name: '影刃刺客 guild', description: '以暗杀和情报收集为生的秘密组织。', relationships: [{ factionId: 'f4', type: 'hostile' }, { factionId: 'f2', type: 'neutral' }], level: 3 },
-    { id: 'f6', name: '元素学院', description: '研究元素魔法和自然力量的学术组织。', relationships: [{ factionId: 'f1', type: 'ally' }, { factionId: 'f2', type: 'neutral' }], level: 4 },
-    { id: 'f7', name: '龙骑士团', description: '与巨龙缔结契约的骑士组织，拥有强大的空中战斗力。', relationships: [{ factionId: 'f1', type: 'ally' }, { factionId: 'f4', type: 'ally' }], level: 5 },
-    { id: 'f8', name: '暗夜兄弟会', description: '在阴影中活动的盗贼和情报组织。', relationships: [{ factionId: 'f5', type: 'ally' }, { factionId: 'f3', type: 'neutral' }], level: 3 },
-    { id: 'f9', name: '圣光教会', description: '信仰光明神的宗教组织，致力于净化黑暗。', relationships: [{ factionId: 'f2', type: 'hostile' }, { factionId: 'f1', type: 'ally' }], level: 4 },
-    { id: 'f10', name: '机械工坊', description: '专注于机械发明和科技研究的组织。', relationships: [{ factionId: 'f1', type: 'ally' }, { factionId: 'f6', type: 'neutral' }], level: 3 }
+    { id: 'f1', name: '以太议会', description: '管理所有浮空岛屿以太分配的最高机构。', relationships: [{ factionId: 'f2', type: 'hostile' }], level: 5 },
+    { id: 'f2', name: '深渊教团', description: '崇拜迷雾深处古神的秘密组织。', relationships: [{ factionId: 'f1', type: 'hostile' }], level: 4 }
   ],
   characters: [
-    { 
-      id: 'c1', 
-      name: '艾琳·星影', 
-      age: '24', 
-      traits: ['勇敢', '敏锐', '孤独'], 
-      milestones: [{ id: 'm1', title: '发现秘钥', description: '在海渊深处发现了重燃神火的秘钥。' }],
-      bonds: [{ characterId: 'c2', type: '导师', value: 85 }, { characterId: 'c3', type: '朋友', value: 70 }, { characterId: 'c10', type: '敌对', value: 20 }],
-      factionIds: ['f1'],
-      itemIds: ['i1']
-    },
-    { 
-      id: 'c2', 
-      name: '索恩大师', 
-      age: '78', 
-      traits: ['睿智', '严厉'], 
-      milestones: [],
-      bonds: [{ characterId: 'c1', type: '学徒', value: 85 }, { characterId: 'c4', type: '旧识', value: 60 }],
-      factionIds: ['f1', 'f6'],
-      itemIds: []
-    },
-    { 
-      id: 'c3', 
-      name: '卡修斯·风暴', 
-      age: '28', 
-      traits: ['忠诚', '勇敢', '正直'], 
-      milestones: [{ id: 'm2', title: '骑士授勋', description: '被授予浮空骑士团的最高荣誉。' }],
-      bonds: [{ characterId: 'c1', type: '朋友', value: 70 }, { characterId: 'c5', type: '战友', value: 80 }, { characterId: 'c9', type: '敌对', value: 30 }],
-      factionIds: ['f4'],
-      itemIds: ['i2']
-    },
-    { 
-      id: 'c4', 
-      name: '莱雅·月舞', 
-      age: '30', 
-      traits: ['优雅', '聪明', '神秘'], 
-      milestones: [{ id: 'm3', title: '商会领袖', description: '成为星界商会的首席执行官。' }],
-      bonds: [{ characterId: 'c2', type: '旧识', value: 60 }, { characterId: 'c6', type: '合作伙伴', value: 75 }],
-      factionIds: ['f3'],
-      itemIds: ['i3']
-    },
-    { 
-      id: 'c5', 
-      name: '加里·铁手', 
-      age: '35', 
-      traits: ['强壮', '忠诚', '鲁莽'], 
-      milestones: [{ id: 'm4', title: '龙骑士', description: '成功与巨龙缔结契约。' }],
-      bonds: [{ characterId: 'c3', type: '战友', value: 80 }, { characterId: 'c7', type: '竞争对手', value: 50 }],
-      factionIds: ['f7'],
-      itemIds: ['i4']
-    },
-    { 
-      id: 'c6', 
-      name: '维娜·元素', 
-      age: '26', 
-      traits: ['聪明', '好奇', '固执'], 
-      milestones: [{ id: 'm5', title: '元素大师', description: '掌握了四种元素的融合魔法。' }],
-      bonds: [{ characterId: 'c4', type: '合作伙伴', value: 75 }, { characterId: 'c8', type: '师徒', value: 85 }],
-      factionIds: ['f6'],
-      itemIds: ['i5']
-    },
-    { 
-      id: 'c7', 
-      name: '达克·暗影', 
-      age: '32', 
-      traits: ['敏捷', '狡猾', '残忍'], 
-      milestones: [{ id: 'm6', title: '影刃首领', description: '成为影刃刺客公会的首领。' }],
-      bonds: [{ characterId: 'c5', type: '竞争对手', value: 50 }, { characterId: 'c9', type: '盟友', value: 70 }, { characterId: 'c10', type: '朋友', value: 65 }],
-      factionIds: ['f5'],
-      itemIds: ['i6']
-    },
-    { 
-      id: 'c8', 
-      name: '莉莉丝·光语', 
-      age: '22', 
-      traits: ['善良', '虔诚', '勇敢'], 
-      milestones: [{ id: 'm7', title: '圣女', description: '被圣光教会授予圣女称号。' }],
-      bonds: [{ characterId: 'c6', type: '师徒', value: 85 }, { characterId: 'c11', type: '姐妹', value: 90 }],
-      factionIds: ['f9'],
-      itemIds: ['i7']
-    },
-    { 
-      id: 'c9', 
-      name: '莫甘·血牙', 
-      age: '40', 
-      traits: ['残忍', '野心', '强大'], 
-      milestones: [{ id: 'm8', title: '深渊祭司', description: '成为深渊教团的高级祭司。' }],
-      bonds: [{ characterId: 'c3', type: '敌对', value: 30 }, { characterId: 'c7', type: '盟友', value: 70 }, { characterId: 'c12', type: '部下', value: 80 }],
-      factionIds: ['f2'],
-      itemIds: ['i8']
-    },
-    { 
-      id: 'c10', 
-      name: '艾尔文·机械', 
-      age: '27', 
-      traits: ['聪明', '创新', '古怪'], 
-      milestones: [{ id: 'm9', title: '发明大师', description: '发明了自动飞行装置。' }],
-      bonds: [{ characterId: 'c1', type: '敌对', value: 20 }, { characterId: 'c7', type: '朋友', value: 65 }, { characterId: 'c13', type: '助手', value: 75 }],
-      factionIds: ['f10'],
-      itemIds: ['i9']
-    },
-    { 
-      id: 'c11', 
-      name: '艾米莉亚·光羽', 
-      age: '20', 
-      traits: ['天真', '善良', '勇敢'], 
-      milestones: [{ id: 'm10', title: '圣光学徒', description: '成为圣光教会的正式学徒。' }],
-      bonds: [{ characterId: 'c8', type: '姐妹', value: 90 }, { characterId: 'c14', type: '朋友', value: 60 }],
-      factionIds: ['f9'],
-      itemIds: []
-    },
-    { 
-      id: 'c12', 
-      name: '巴尔·深渊', 
-      age: '35', 
-      traits: ['忠诚', '强大', '沉默'], 
-      milestones: [{ id: 'm11', title: '深渊骑士', description: '成为深渊教团的骑士队长。' }],
-      bonds: [{ characterId: 'c9', type: '部下', value: 80 }, { characterId: 'c15', type: '敌人', value: 25 }],
-      factionIds: ['f2'],
-      itemIds: ['i10']
-    },
-    { 
-      id: 'c13', 
-      name: '托比·齿轮', 
-      age: '25', 
-      traits: ['勤奋', '忠诚', '技术精湛'], 
-      milestones: [{ id: 'm12', title: '首席助手', description: '成为机械工坊的首席助手。' }],
-      bonds: [{ characterId: 'c10', type: '助手', value: 75 }, { characterId: 'c16', type: '朋友', value: 65 }],
-      factionIds: ['f10'],
-      itemIds: []
-    },
-    { 
-      id: 'c14', 
-      name: '莎拉·风语', 
-      age: '23', 
-      traits: ['自由', '活泼', '机智'], 
-      milestones: [{ id: 'm13', title: '商队领队', description: '成为星界商会的商队领队。' }],
-      bonds: [{ characterId: 'c11', type: '朋友', value: 60 }, { characterId: 'c17', type: '合作伙伴', value: 70 }],
-      factionIds: ['f3'],
-      itemIds: []
-    },
-    { 
-      id: 'c15', 
-      name: '亚瑟·圣光', 
-      age: '30', 
-      traits: ['正直', '勇敢', '虔诚'], 
-      milestones: [{ id: 'm14', title: '圣骑士', description: '成为圣光教会的圣骑士。' }],
-      bonds: [{ characterId: 'c12', type: '敌人', value: 25 }, { characterId: 'c18', type: '战友', value: 75 }],
-      factionIds: ['f9'],
-      itemIds: []
-    },
-    { 
-      id: 'c16', 
-      name: '露娜·星尘', 
-      age: '22', 
-      traits: ['神秘', '聪明', '冷静'], 
-      milestones: [{ id: 'm15', title: '星象师', description: '掌握了星象预言的能力。' }],
-      bonds: [{ characterId: 'c13', type: '朋友', value: 65 }, { characterId: 'c19', type: '竞争对手', value: 45 }],
-      factionIds: ['f6'],
-      itemIds: []
-    },
-    { 
-      id: 'c17', 
-      name: '杰克·暗夜', 
-      age: '28', 
-      traits: ['敏捷', '狡猾', '幽默'], 
-      milestones: [{ id: 'm16', title: '盗贼大师', description: '成为暗夜兄弟会的盗贼大师。' }],
-      bonds: [{ characterId: 'c14', type: '合作伙伴', value: 70 }, { characterId: 'c20', type: '盟友', value: 60 }],
-      factionIds: ['f8'],
-      itemIds: []
-    },
-    { 
-      id: 'c18', 
-      name: '奥黛丽·龙语', 
-      age: '26', 
-      traits: ['高贵', '强大', '智慧'], 
-      milestones: [{ id: 'm17', title: '龙语者', description: '掌握了与巨龙沟通的能力。' }],
-      bonds: [{ characterId: 'c15', type: '战友', value: 75 }, { characterId: 'c5', type: '盟友', value: 65 }],
-      factionIds: ['f7'],
-      itemIds: []
-    },
-    { 
-      id: 'c19', 
-      name: '卡尔·火元素', 
-      age: '30', 
-      traits: ['热情', '冲动', '强大'], 
-      milestones: [{ id: 'm18', title: '火元素使', description: '掌握了高级火元素魔法。' }],
-      bonds: [{ characterId: 'c16', type: '竞争对手', value: 45 }, { characterId: 'c6', type: '师徒', value: 70 }],
-      factionIds: ['f6'],
-      itemIds: []
-    },
-    { 
-      id: 'c20', 
-      name: '娜塔莎·暗影', 
-      age: '25', 
-      traits: ['神秘', '敏捷', '危险'], 
-      milestones: [{ id: 'm19', title: '暗影刺客', description: '成为影刃刺客公会的顶级刺客。' }],
-      bonds: [{ characterId: 'c17', type: '盟友', value: 60 }, { characterId: 'c7', type: '部下', value: 75 }],
-      factionIds: ['f5'],
-      itemIds: []
-    }
+    { id: 'c1', name: '艾琳·星影', age: '24', gender: 'female', avatarConfigId: 'avatar2', traits: ['勇敢', '敏锐', '孤独'], milestones: [{ id: 'm1', title: '发现秘钥', description: '在海渊深处发现了重燃神火的秘钥。' }], bonds: [{ characterId: 'c2', type: '导师', friendlyValue: 85, hostileValue: 0 }, { characterId: 'c3', type: '朋友', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: ['i1'] },
+    { id: 'c2', name: '索恩大师', age: '78', gender: 'male', avatarConfigId: 'avatar19', traits: ['睿智', '严厉', '深沉'], milestones: [{ id: 'm2', title: '觉醒神火', description: '成为以太议会最年长的觉醒者。' }], bonds: [{ characterId: 'c1', type: '学徒', friendlyValue: 85, hostileValue: 0 }, { characterId: 'c4', type: '对手', friendlyValue: 30, hostileValue: 40 }], factionId: 'f1', itemIds: ['i2'] },
+    { id: 'c3', name: '凯尔·风行者', age: '26', gender: 'male', avatarConfigId: 'avatar9', traits: ['热情', '冲动', '正义'], milestones: [{ id: 'm3', title: '首次远征', description: '带领队伍穿越迷雾边界。' }], bonds: [{ characterId: 'c1', type: '朋友', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c5', type: '恋人', friendlyValue: 95, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c4', name: '维克多·暗影', age: '45', gender: 'male', avatarConfigId: 'avatar13', traits: ['狡猾', '野心', '冷酷'], milestones: [{ id: 'm4', title: '篡位成功', description: '通过阴谋夺取了深渊教团的领导权。' }], bonds: [{ characterId: 'c2', type: '对手', friendlyValue: 30, hostileValue: 40 }, { characterId: 'c6', type: '导师', friendlyValue: 60, hostileValue: 0 }], factionId: 'f2', itemIds: ['i3'] },
+    { id: 'c5', name: '莉娜·月光', age: '23', gender: 'female', avatarConfigId: 'avatar32', traits: ['温柔', '聪慧', '坚韧'], milestones: [{ id: 'm5', title: '治愈瘟疫', description: '用月光之力治愈了浮空岛的瘟疫。' }], bonds: [{ characterId: 'c3', type: '恋人', friendlyValue: 95, hostileValue: 0 }, { characterId: 'c7', type: '朋友', friendlyValue: 75, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c6', name: '摩根·黑袍', age: '120', gender: 'male', avatarConfigId: 'avatar15', traits: ['神秘', '博学', '阴沉'], milestones: [{ id: 'm6', title: '永生仪式', description: '完成了禁忌的永生仪式。' }], bonds: [{ characterId: 'c4', type: '学徒', friendlyValue: 60, hostileValue: 0 }, { characterId: 'c8', type: '敌人', friendlyValue: 0, hostileValue: 80 }], factionId: 'f2', itemIds: ['i4'] },
+    { id: 'c7', name: '艾伦·铁心', age: '32', gender: 'male', avatarConfigId: 'avatar11', traits: ['忠诚', '勇敢', '固执'], milestones: [{ id: 'm7', title: '守卫要塞', description: '独自守卫边境要塞三天三夜。' }], bonds: [{ characterId: 'c5', type: '朋友', friendlyValue: 75, hostileValue: 0 }, { characterId: 'c9', type: '战友', friendlyValue: 80, hostileValue: 0 }], factionId: 'f1', itemIds: ['i5'] },
+    { id: 'c8', name: '塞拉斯·光明', age: '50', gender: 'male', avatarConfigId: 'avatar15', traits: ['正义', '仁慈', '坚定'], milestones: [{ id: 'm8', title: '净化圣地', description: '清除了深渊教团污染的圣地。' }], bonds: [{ characterId: 'c6', type: '敌人', friendlyValue: 0, hostileValue: 80 }, { characterId: 'c10', type: '朋友', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c9', name: '瑞文·夜刃', age: '28', gender: 'female', avatarConfigId: 'avatar14', traits: ['敏捷', '沉默', '可靠'], milestones: [{ id: 'm9', title: '刺杀成功', description: '成功刺杀了敌方的指挥官。' }], bonds: [{ characterId: 'c7', type: '战友', friendlyValue: 80, hostileValue: 0 }, { characterId: 'c11', type: '朋友', friendlyValue: 65, hostileValue: 0 }], factionId: 'f1', itemIds: ['i6'] },
+    { id: 'c10', name: '伊莎贝拉·晨曦', age: '35', gender: 'female', avatarConfigId: 'avatar40', traits: ['优雅', '智慧', '神秘'], milestones: [{ id: 'm10', title: '预言实现', description: '预言了浮空岛的危机并成功化解。' }], bonds: [{ characterId: 'c8', type: '朋友', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c12', type: '导师', friendlyValue: 75, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c11', name: '马库斯·雷霆', age: '40', gender: 'male', avatarConfigId: 'avatar3', traits: ['强壮', '直率', '暴躁'], milestones: [{ id: 'm11', title: '击败巨兽', description: '单枪匹马击败了迷雾中的巨兽。' }], bonds: [{ characterId: 'c9', type: '朋友', friendlyValue: 65, hostileValue: 0 }, { characterId: 'c13', type: '对手', friendlyValue: 40, hostileValue: 20 }], factionId: 'f1', itemIds: ['i7'] },
+    { id: 'c12', name: '奥菲利亚·星语', age: '200', gender: 'female', avatarConfigId: 'avatar6', traits: ['古老', '睿智', '超然'], milestones: [{ id: 'm12', title: '见证纪元', description: '见证了浮空岛三个纪元的变迁。' }], bonds: [{ characterId: 'c10', type: '学徒', friendlyValue: 75, hostileValue: 0 }, { characterId: 'c14', type: '朋友', friendlyValue: 60, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c13', name: '德雷克·烈焰', age: '38', gender: 'male', avatarConfigId: 'avatar3', traits: ['狂野', '自信', '好战'], milestones: [{ id: 'm13', title: '征服竞技场', description: '连续三年称霸浮空岛竞技场。' }], bonds: [{ characterId: 'c11', type: '对手', friendlyValue: 40, hostileValue: 20 }, { characterId: 'c15', type: '朋友', friendlyValue: 55, hostileValue: 0 }], factionId: 'f1', itemIds: ['i8'] },
+    { id: 'c14', name: '希尔瓦娜·自然', age: '150', gender: 'female', avatarConfigId: 'avatar34', traits: ['平和', '慈爱', '古老'], milestones: [{ id: 'm14', title: '种植神树', description: '培育出了能净化迷雾的神树。' }], bonds: [{ characterId: 'c12', type: '朋友', friendlyValue: 60, hostileValue: 0 }, { characterId: 'c16', type: '导师', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c15', name: '罗根·钢铁', age: '45', gender: 'male', avatarConfigId: 'avatar89', traits: ['坚毅', '务实', '忠诚'], milestones: [{ id: 'm15', title: '锻造神器', description: '锻造出了能对抗深渊的神器。' }], bonds: [{ characterId: 'c13', type: '朋友', friendlyValue: 55, hostileValue: 0 }, { characterId: 'c17', type: '朋友', friendlyValue: 65, hostileValue: 0 }], factionId: 'f1', itemIds: ['i9'] },
+    { id: 'c16', name: '艾莉亚·春风', age: '22', gender: 'female', avatarConfigId: 'avatar38', traits: ['活泼', '善良', '天真'], milestones: [{ id: 'm16', title: '治愈森林', description: '用歌声治愈了枯萎的森林。' }], bonds: [{ characterId: 'c14', type: '学徒', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c18', type: '朋友', friendlyValue: 80, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c17', name: '托马斯·学者', age: '55', gender: 'male', avatarConfigId: 'avatar19', traits: ['博学', '好奇', '严谨'], milestones: [{ id: 'm17', title: '破解古文', description: '破解了远古文明的神秘文字。' }], bonds: [{ characterId: 'c15', type: '朋友', friendlyValue: 65, hostileValue: 0 }, { characterId: 'c19', type: '朋友', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c18', name: '妮娜·星辰', age: '25', gender: 'female', avatarConfigId: 'avatar36', traits: ['梦幻', '敏感', '艺术'], milestones: [{ id: 'm18', title: '创作神曲', description: '创作出了能唤醒沉睡者的神曲。' }], bonds: [{ characterId: 'c16', type: '朋友', friendlyValue: 80, hostileValue: 0 }, { characterId: 'c20', type: '朋友', friendlyValue: 75, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c19', name: '格雷戈里·智者', age: '65', gender: 'male', avatarConfigId: 'avatar15', traits: ['深沉', '睿智', '神秘'], milestones: [{ id: 'm19', title: '建立学院', description: '建立了浮空岛最著名的魔法学院。' }], bonds: [{ characterId: 'c17', type: '朋友', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c21', type: '导师', friendlyValue: 80, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c20', name: '露西·彩虹', age: '20', gender: 'female', avatarConfigId: 'avatar42', traits: ['乐观', '开朗', '善良'], milestones: [{ id: 'm20', title: '带来希望', description: '在最黑暗的时期为人们带来了希望。' }], bonds: [{ characterId: 'c18', type: '朋友', friendlyValue: 75, hostileValue: 0 }, { characterId: 'c22', type: '朋友', friendlyValue: 85, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c21', name: '亚历山大·王者', age: '48', gender: 'male', avatarConfigId: 'avatar11', traits: ['威严', '公正', '果断'], milestones: [{ id: 'm21', title: '统一群岛', description: '统一了分裂的浮空群岛。' }], bonds: [{ characterId: 'c19', type: '学徒', friendlyValue: 80, hostileValue: 0 }, { characterId: 'c23', type: '朋友', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: ['i10'] },
+    { id: 'c22', name: '米娅·花语', age: '19', gender: 'female', avatarConfigId: 'avatar2', traits: ['温柔', '敏感', '纯真'], milestones: [{ id: 'm22', title: '培育新品种', description: '培育出了能治愈心灵的花朵。' }], bonds: [{ characterId: 'c20', type: '朋友', friendlyValue: 85, hostileValue: 0 }, { characterId: 'c24', type: '朋友', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c23', name: '雷纳德·骑士', age: '36', gender: 'male', avatarConfigId: 'avatar11', traits: ['勇敢', '忠诚', '正义'], milestones: [{ id: 'm23', title: '拯救公主', description: '从深渊教团手中救出了公主。' }], bonds: [{ characterId: 'c21', type: '朋友', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c25', type: '战友', friendlyValue: 85, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c24', name: '索菲亚·织梦', age: '30', gender: 'female', avatarConfigId: 'avatar6', traits: ['神秘', '优雅', '深邃'], milestones: [{ id: 'm24', title: '编织梦境', description: '创造出了能预知未来的梦境。' }], bonds: [{ characterId: 'c22', type: '朋友', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c26', type: '朋友', friendlyValue: 65, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c25', name: '卡尔·守护者', age: '42', gender: 'male', avatarConfigId: 'avatar95', traits: ['坚毅', '沉默', '可靠'], milestones: [{ id: 'm25', title: '守护圣物', description: '守护以太圣物长达二十年。' }], bonds: [{ characterId: 'c23', type: '战友', friendlyValue: 85, hostileValue: 0 }, { characterId: 'c27', type: '朋友', friendlyValue: 60, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c26', name: '艾玛·时光', age: '180', gender: 'female', avatarConfigId: 'avatar6', traits: ['超然', '睿智', '神秘'], milestones: [{ id: 'm26', title: '穿越时空', description: '成功穿越时空看到了未来。' }], bonds: [{ characterId: 'c24', type: '朋友', friendlyValue: 65, hostileValue: 0 }, { characterId: 'c28', type: '导师', friendlyValue: 75, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c27', name: '杰克·航海家', age: '34', gender: 'male', avatarConfigId: 'avatar29', traits: ['冒险', '自由', '乐观'], milestones: [{ id: 'm27', title: '发现新大陆', description: '在迷雾中发现了新的浮空大陆。' }], bonds: [{ characterId: 'c25', type: '朋友', friendlyValue: 60, hostileValue: 0 }, { characterId: 'c29', type: '朋友', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c28', name: '莉莉·晨露', age: '21', gender: 'female', avatarConfigId: 'avatar4', traits: ['清新', '活力', '希望'], milestones: [{ id: 'm28', title: '净化水源', description: '净化了被污染的浮空岛水源。' }], bonds: [{ characterId: 'c26', type: '学徒', friendlyValue: 75, hostileValue: 0 }, { characterId: 'c30', type: '朋友', friendlyValue: 80, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c29', name: '奥斯卡·发明家', age: '52', gender: 'male', avatarConfigId: 'avatar69', traits: ['创新', '执着', '天才'], milestones: [{ id: 'm29', title: '发明飞艇', description: '发明了能穿越迷雾的飞艇。' }], bonds: [{ characterId: 'c27', type: '朋友', friendlyValue: 70, hostileValue: 0 }, { characterId: 'c1', type: '朋友', friendlyValue: 60, hostileValue: 0 }], factionId: 'f1', itemIds: [] },
+    { id: 'c30', name: '艾娃·守护天使', age: '28', gender: 'female', avatarConfigId: 'avatar16', traits: ['圣洁', '慈悲', '强大'], milestones: [{ id: 'm30', title: '觉醒神格', description: '觉醒了沉睡的神格，成为守护天使。' }], bonds: [{ characterId: 'c28', type: '朋友', friendlyValue: 80, hostileValue: 0 }, { characterId: 'c2', type: '学徒', friendlyValue: 70, hostileValue: 0 }], factionId: 'f1', itemIds: [] }
   ],
   items: [
     { id: 'i1', name: '星辰秘钥', description: '传说中能唤醒众神的神器。', type: '神器', powerSystemId: 'p1' },
@@ -560,7 +388,111 @@ const INITIAL_WORLD: World = {
     totalWords: 12482,
     todayWords: 500,
     consecutiveDays: 7
-  }
+  },
+  characterTags: ['勇敢', '聪明', '善良', '狡猾', '忠诚', '残忍', '正直', '神秘'],
+  bondTypes: ['朋友', '敌人', '导师', '学徒', '亲人', '合作伙伴', '对手', '同盟'],
+  avatarConfigs: [
+    { id: 'avatar1', name: '青年女战士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，战士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，红黑铠甲，火焰风格，红金主色调，火焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar2', name: '少女法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，蓝白长裙，寒冰风格，蓝白主色调，冰晶漂浮，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar3', name: '青年剑客-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，剑客，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，紫色长袍，雷电风格，紫黑主色调，雷电缠绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar4', name: '青年占星师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，占星师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar5', name: '青年术士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，术士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，黑袍，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar6', name: '青年守护者-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，守护者，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，绿金服装，自然风格，青绿主色调，植物环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar7', name: '青年战士-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，战士，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色铠甲，火焰风格，红金主色调，火焰能量，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar8', name: '青年祭司-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，祭司，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，白金长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar9', name: '青年魅者-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，魅者，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，红色轻纱，火焰风格，红金主色调，火焰与幻影，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar10', name: '少女战士-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，战士，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，银白铠甲，雷电风格，蓝白主色调，雷电缠绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar11', name: '中年法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，深紫长袍，星辰风格，紫黑主色调，星光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar12', name: '少女刺客-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，刺客，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，黑色紧身衣，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar13', name: '青年剑圣-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，剑圣，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，白色剑服，光明风格，金白主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar14', name: '中年女术士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，术士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，暗红长袍，黑暗风格，红金主色调，黑红能量，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar15', name: '老年贤者-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，贤者，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，灰白长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar16', name: '青年女刺客-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，刺客，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，紫色轻甲，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar17', name: '少年法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，青色长袍，自然风格，青绿主色调，藤蔓环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar18', name: '中年战士-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，战士，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗金铠甲，火焰风格，红金主色调，烈焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar19', name: '少女祭司-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，祭司，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，纯白长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar20', name: '青年召唤师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，召唤师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar21', name: '中年女法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，冰蓝长袍，寒冰风格，蓝白主色调，冰晶环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar22', name: '少年战士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，战士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，暗红铠甲，火焰风格，红金主色调，烈焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar23', name: '老年女祭司-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，祭司，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，银白长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar24', name: '青年女剑圣-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，剑圣，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，银白剑服，雷电风格，蓝白主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar25', name: '少女魅者-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，魅者，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，粉色轻纱，自然风格，青绿主色调，花瓣环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar26', name: '中年术士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，术士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深紫长袍，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar27', name: '青年守护者-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，守护者，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色铠甲，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar28', name: '少女占星师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，占星师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar29', name: '中年剑圣-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，剑圣，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，深蓝剑服，雷电风格，蓝白主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar30', name: '青年女召唤师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，召唤师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，紫色长袍，星辰风格，紫黑主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar31', name: '老年战士-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，战士，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗金铠甲，火焰风格，红金主色调，烈焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar32', name: '少女刺客-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，刺客，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，黑色轻甲，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar33', name: '青年法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，青色长袍，自然风格，青绿主色调，藤蔓环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar34', name: '中年女守护者-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，守护者，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，翠绿长袍，自然风格，青绿主色调，植物环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar35', name: '少年术士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，术士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，暗紫长袍，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar36', name: '青年女战士-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，战士，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，红金铠甲，火焰风格，红金主色调，烈焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar37', name: '中年祭司-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，祭司，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，白金长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar38', name: '少女法师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，法师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，紫色长袍，雷电风格，紫黑主色调，雷电缠绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar39', name: '老年魅者-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，魅者，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，暗红轻纱，火焰风格，红金主色调，幻影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar40', name: '青年剑客-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，剑客，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗红剑服，火焰风格，红金主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar41', name: '中年女刺客-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，刺客，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，翠绿轻甲，自然风格，青绿主色调，藤蔓环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar42', name: '老年女法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，银白长袍，星辰风格，蓝白主色调，星光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar43', name: '少年剑圣-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，剑圣，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，白色剑服，光明风格，金白主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar44', name: '少女召唤师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，召唤师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深紫长袍，星辰风格，紫黑主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar45', name: '青年女占星师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，占星师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar46', name: '中年战士-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，战士，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，暗红铠甲，火焰风格，红金主色调，烈焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar47', name: '老年女祭司-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，祭司，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，银白长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar48', name: '少年魅者-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，魅者，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，粉色轻纱，自然风格，青绿主色调，花瓣环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar49', name: '青年守护者-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，守护者，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色铠甲，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar50', name: '少女刺客-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，刺客，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，暗紫轻甲，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar51', name: '中年女剑圣-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，剑圣，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，银白剑服，雷电风格，蓝白主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar52', name: '老年战士-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，战士，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗金铠甲，火焰风格，红金主色调，烈焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar53', name: '少女法师-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，法师，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，金色长袍，火焰风格，红金主色调，火焰能量，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar54', name: '青年术士-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，术士，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深紫长袍，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar55', name: '中年祭司-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，祭司，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，翠绿长袍，自然风格，青绿主色调，植物环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar56', name: '老年女刺客-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，刺客，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，黑色轻甲，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar57', name: '少年守护者-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，守护者，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色铠甲，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar58', name: '青年女魅者-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，魅者，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，红色轻纱，火焰风格，红金主色调，火焰与幻影，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar59', name: '中年召唤师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，召唤师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar60', name: '少女占星师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，占星师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar61', name: '老年女剑圣-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，剑圣，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，银白剑服，雷电风格，蓝白主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar62', name: '少年战士-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，战士，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，翠绿铠甲，自然风格，青绿主色调，藤蔓环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar63', name: '青年女祭司-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，祭司，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，金色长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar64', name: '中年刺客-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，刺客，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，暗紫轻甲，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar65', name: '少女守护者-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，守护者，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，翠绿长袍，自然风格，青绿主色调，植物环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar66', name: '老年魅者-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，魅者，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，暗红轻纱，火焰风格，红金主色调，幻影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar67', name: '青年法师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，法师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深紫长袍，星辰风格，紫黑主色调，星光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar68', name: '中年女占星师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，占星师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar69', name: '少年剑客-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，剑客，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色剑服，火焰风格，红金主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar70', name: '老年召唤师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，召唤师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，银白长袍，星辰风格，蓝白主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar71', name: '少女魅者-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，魅者，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，金色轻纱，火焰风格，红金主色调，火焰与幻影，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar72', name: '中年女战士-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，战士，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，银白铠甲，雷电风格，蓝白主色调，雷电缠绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar73', name: '老年法师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，法师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，银白长袍，星辰风格，蓝白主色调，星光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar74', name: '青年祭司-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，祭司，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，暗红长袍，黑暗风格，紫黑主色调，黑红能量，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar75', name: '少年刺客-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，刺客，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，黑色紧身衣，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar76', name: '中年女剑客-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，剑客，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色剑服，火焰风格，红金主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar77', name: '老年守护者-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，守护者，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗金铠甲，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar78', name: '少女术士-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，术士，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，暗紫轻纱，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar79', name: '青年女召唤师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，召唤师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，翠绿长袍，自然风格，青绿主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar80', name: '中年占星师-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，占星师，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深紫长袍，黑暗风格，紫黑主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar81', name: '老年女剑圣-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，剑圣，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，翠绿剑服，自然风格，青绿主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar82', name: '少年祭司-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，祭司，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，白金长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar83', name: '青年战士-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，战士，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，翠绿铠甲，自然风格，青绿主色调，藤蔓环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar84', name: '中年女魅者-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，魅者，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，红色轻纱，火焰风格，红金主色调，火焰与幻影，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar85', name: '老年刺客-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，刺客，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，暗紫轻甲，黑暗风格，紫黑主色调，暗影环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar86', name: '少女法师-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，法师，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，暗紫长袍，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar87', name: '青年守护者-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，守护者，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，翠绿铠甲，自然风格，青绿主色调，植物环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar88', name: '中年女占星师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，占星师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar89', name: '老年剑客-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，剑客，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗金剑服，火焰风格，红金主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar90', name: '少年召唤师-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，召唤师，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，符文环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar91', name: '青年女战士-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，战士，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，红色轻甲，火焰风格，红金主色调，火焰环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar92', name: '中年祭司-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，祭司，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，金色长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar93', name: '老年女术士-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年女性，术士，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，银白长袍，黑暗风格，紫黑主色调，黑雾环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar94', name: '少年剑圣-魔族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少年男性，剑圣，魔族，黑色角，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，暗红剑服，火焰风格，红金主色调，剑气环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar95', name: '青年占星师-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年男性，占星师，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：神秘，深蓝长袍，星辰风格，蓝白主色调，星光粒子，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar96', name: '中年女守护者-龙族', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年女性，守护者，龙族，龙角与鳞片，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：威严，金色铠甲，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar97', name: '老年魅者-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，老年男性，魅者，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：邪魅，翠绿轻纱，自然风格，青绿主色调，花瓣环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar98', name: '少女刺客-精灵', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，少女女性，刺客，精灵，长耳，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：冷艳，翠绿轻甲，自然风格，青绿主色调，藤蔓环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar99', name: '青年女祭司-狐妖', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，青年女性，祭司，狐妖，狐耳与尾巴，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：温柔，白色长袍，光明风格，金白主色调，圣光环绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' },
+    { id: 'avatar100', name: '中年战士-人类', baseUrl: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=中国玄幻人物，中年男性，战士，人类，正面视角，直视观众，居中构图，半身像，精致五官，对称脸型，大眼睛，细腻皮肤，表情：狂气，银白铠甲，雷电风格，蓝白主色调，雷电缠绕，油画厚涂风格，笔触明显，强光影对比，梦幻氛围，高饱和色彩，超精细，1k，(front view:1.4), (facing viewer:1.5), (symmetrical face:1.3)&image_size=square_hd' }
+  ]
 };
 
 // --- Components ---
@@ -619,42 +551,55 @@ const Badge: React.FC<{ children: React.ReactNode, color?: string }> = ({ childr
 
 const OverviewView = () => {
   const { world } = useWorld();
+  
+  const stats = {
+    erasCount: world.eras.length,
+    factionsCount: world.factions.length,
+    charactersCount: world.characters.length,
+    itemsCount: world.items.length,
+    powersCount: world.powerSystems.length,
+    eventsCount: world.timeline.length
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-      <PageHeader title="世界概览" breadcrumb="蒙昧纪元" />
-      <Card title="核心描述">
-        <div className="space-y-8">
-          <p className="text-xl 2xl:text-3xl text-on-surface leading-relaxed font-light first-letter:text-5xl first-letter:font-bold first-letter:mr-2 first-letter:float-left first-letter:text-primary first-letter:leading-tight">
-            {world.description}
-          </p>
-        </div>
-        <div className="mt-16 pt-10 border-t border-outline-variant/10 flex flex-wrap gap-12">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 label-font font-bold">字数统计</span>
-            <span className="text-xl font-black">12,482</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 label-font font-bold">最后更新</span>
-            <span className="text-xl font-black">2023年10月24日</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant/40 label-font font-bold">状态</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary" />
-              <span className="text-xl font-black text-primary">草稿</span>
+      <PageHeader title="世界概览" />
+      
+      {/* 世界信息卡片 */}
+      <Card>
+        <div className="space-y-6">
+          <div className="flex items-start gap-6">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-lg">
+              <Globe className="w-12 h-12 text-primary" />
             </div>
+            <div className="flex-1">
+              <h1 className="text-3xl font-extrabold text-on-surface mb-2">{world.name}</h1>
+              <p className="text-on-surface-variant/80 text-lg leading-relaxed">{world.description}</p>
+            </div>
+          </div>
+          
+          {/* 统计数据网格 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-6 border-t border-outline-variant/10">
+            <StatCard icon={History} label="时代" value={stats.erasCount} color="bg-amber-500" delay={0} />
+            <StatCard icon={Users} label="势力" value={stats.factionsCount} color="bg-blue-500" delay={1} />
+            <StatCard icon={UserIcon} label="人物" value={stats.charactersCount} color="bg-emerald-500" delay={2} />
+            <StatCard icon={Layers} label="物品" value={stats.itemsCount} color="bg-purple-500" delay={3} />
+            <StatCard icon={Zap} label="力量" value={stats.powersCount} color="bg-rose-500" delay={4} />
+            <StatCard icon={Clock} label="事件" value={stats.eventsCount} color="bg-cyan-500" delay={5} />
           </div>
         </div>
       </Card>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      {/* 快速访问卡片 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 最近时代 */}
         <Card title="最近时代">
-          <div className="space-y-4">
-            {world.eras.slice(0, 2).map(era => (
-              <Link key={era.id} to={`/eras/${era.id}`} className="block hover:bg-surface-container-high transition-colors">
-                <div className="flex justify-between items-center p-4 bg-surface-container-low rounded-xl">
+          <div className="space-y-3">
+            {world.eras.slice(0, 3).map(era => (
+              <Link key={era.id} to={`/eras/${era.id}`} className="block">
+                <div className="flex justify-between items-center p-4 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
                   <div>
-                    <h4 className="font-bold">{era.name}</h4>
+                    <h4 className="font-bold text-on-surface">{era.name}</h4>
                     <p className="text-xs text-on-surface-variant/60">{era.years}</p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-primary" />
@@ -663,13 +608,114 @@ const OverviewView = () => {
             ))}
           </div>
         </Card>
+
+        {/* 关键势力 */}
         <Card title="关键势力">
-          <div className="flex flex-wrap gap-2">
-            {world.factions.map(f => (
-              <Badge key={f.id}>{f.name}</Badge>
+          <div className="space-y-3">
+            {world.factions.slice(0, 3).map(faction => (
+              <Link key={faction.id} to={`/factions/${faction.id}`} className="block">
+                <div className="flex justify-between items-center p-4 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-on-surface">{faction.name}</h4>
+                      <p className="text-xs text-on-surface-variant/60">
+                        {world.characters.filter(c => c.factionId === faction.id).length} 成员
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                </div>
+              </Link>
             ))}
           </div>
         </Card>
+      </div>
+
+      {/* 写作统计 */}
+      <Card title="写作进度">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+              <h4 className="text-sm text-on-surface-variant/70 mb-1">总字数</h4>
+              <p className="text-xl font-medium text-on-surface">{world.writingStats.totalWords} <span className="text-sm text-on-surface-variant/60">字</span></p>
+            </div>
+            <div className="p-5 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+              <h4 className="text-sm text-on-surface-variant/70 mb-1">连续写作</h4>
+              <p className="text-xl font-medium text-on-surface">{world.writingStats.consecutiveDays} <span className="text-sm text-on-surface-variant/60">天</span></p>
+            </div>
+            <div className="p-5 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+              <h4 className="text-sm text-on-surface-variant/70 mb-1">今日完成</h4>
+              <p className="text-xl font-medium text-emerald-600">{world.writingStats.todayWords} <span className="text-sm text-emerald-500/70">字</span></p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* 时间线预览 */}
+      <Card title="最近事件">
+        <div className="space-y-4">
+          {world.timeline.slice(0, 4).map(event => (
+            <Link key={event.id} to={`/timeline`} className="block group">
+              <div className="flex gap-4 p-4 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+                <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-bold text-primary">{event.year}</span>
+                    <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">{event.title}</h4>
+                  </div>
+                  <p className="text-sm text-on-surface-variant/80">{event.description}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-on-surface-variant/40 group-hover:text-primary transition-colors" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </Card>
+    </motion.div>
+  );
+};
+
+const StatCard = ({ icon: Icon, label, value, color, delay = 0 }: { icon: LucideIcon; label: string; value: number; color: string; delay?: number }) => {
+  // 定义更柔和的配色方案
+  const colorMap: Record<string, { bg: string; text: string; light: string }> = {
+    'bg-amber-500': { bg: 'bg-amber-100', text: 'text-amber-600', light: 'bg-amber-50' },
+    'bg-blue-500': { bg: 'bg-blue-100', text: 'text-blue-600', light: 'bg-blue-50' },
+    'bg-emerald-500': { bg: 'bg-emerald-100', text: 'text-emerald-600', light: 'bg-emerald-50' },
+    'bg-purple-500': { bg: 'bg-purple-100', text: 'text-purple-600', light: 'bg-purple-50' },
+    'bg-rose-500': { bg: 'bg-rose-100', text: 'text-rose-600', light: 'bg-rose-50' },
+    'bg-cyan-500': { bg: 'bg-cyan-100', text: 'text-cyan-600', light: 'bg-cyan-50' },
+  };
+  
+  const colors = colorMap[color] || { bg: 'bg-gray-100', text: 'text-gray-600', light: 'bg-gray-50' };
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delay * 0.1, duration: 0.4 }}
+      className="group bg-surface-container-low rounded-xl p-4 hover:bg-surface-container-high transition-all duration-300 hover:shadow-md cursor-pointer"
+    >
+      <div className="flex items-center gap-3">
+        {/* 图标容器 - 使用柔和的背景色 */}
+        <div className={`w-10 h-10 rounded-lg ${colors.light} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+          <Icon className={`w-5 h-5 ${colors.text}`} />
+        </div>
+        
+        {/* 内容 */}
+        <div className="flex-1 min-w-0">
+          <div className="text-2xl font-semibold text-on-surface group-hover:text-primary transition-colors duration-300">
+            {value}
+          </div>
+          <div className="text-xs text-on-surface-variant/60">
+            {label}
+          </div>
+        </div>
+        
+        {/* 箭头指示 */}
+        <ChevronRight className="w-4 h-4 text-on-surface-variant/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-300 flex-shrink-0" />
       </div>
     </motion.div>
   );
@@ -725,7 +771,14 @@ const ErasView = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-surface-container-lowest p-8 rounded-2xl w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">添加新时代</h3>
             <div className="space-y-4">
@@ -824,7 +877,14 @@ const TimelineView = () => {
 
       {/* Modal for adding event */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">记录新事件</h3>
             <div className="space-y-4">
@@ -928,7 +988,7 @@ const FactionsView = () => {
       <PageHeader title="势力设定" actions={<button onClick={handleAddFaction} className="bg-primary text-on-primary px-6 py-3 rounded-md font-bold flex items-center gap-2 shadow-lg"><Plus className="w-4 h-4" /> 创建势力</button>} />
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {world.factions.map((faction) => {
-          const memberCount = world.characters.filter(char => char.factionIds?.includes(faction.id)).length;
+          const memberCount = world.characters.filter(char => char.factionId === faction.id).length;
           return (
             <Link key={faction.id} to={`/factions/${faction.id}`} className="block hover:shadow-md transition-shadow group">
               <Card className="hover:border-primary/20 transition-colors cursor-pointer">
@@ -997,7 +1057,14 @@ const FactionsView = () => {
 
       {/* Modal for adding faction */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">创建新势力</h3>
             <div className="space-y-4">
@@ -1133,7 +1200,14 @@ const ItemsView = () => {
 
       {/* Modal for adding item */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">新增物品</h3>
             <div className="space-y-4">
@@ -1364,7 +1438,14 @@ const PowersView = () => {
 
       {/* Modal for adding power system */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">新增力量体系</h3>
             <div className="space-y-4">
@@ -1436,7 +1517,14 @@ const PowersView = () => {
 
       {/* Modal for importing power system */}
       {isImportModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsImportModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-surface rounded-2xl p-8 w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">导入力量体系</h3>
             <div className="space-y-4">
@@ -1503,11 +1591,6 @@ const MainContent: React.FC<{ world: World; setWorld: React.Dispatch<React.SetSt
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { resolvedTheme, setTheme } = useTheme();
-  
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'light' ? 'dark' : 'light');
-  };
   
   return (
     <div className="min-h-screen bg-surface">
@@ -1523,7 +1606,7 @@ const MainContent: React.FC<{ world: World; setWorld: React.Dispatch<React.SetSt
             </div>
           </div>
           
-          <div className="flex items-center gap-4 2xl:gap-8">
+          <div className="flex items-center gap-6 2xl:gap-10">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-4 h-4" />
               <input 
@@ -1532,17 +1615,6 @@ const MainContent: React.FC<{ world: World; setWorld: React.Dispatch<React.SetSt
                 className="bg-surface-container-low border-none rounded-full py-1.5 2xl:py-2.5 pl-10 pr-4 text-sm 2xl:text-base w-64 2xl:w-96 focus:ring-1 focus:ring-primary transition-all outline-none"
               />
             </div>
-            <button 
-              onClick={toggleTheme}
-              className="p-2 2xl:p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all duration-300"
-              title={resolvedTheme === 'light' ? '切换到深色模式' : '切换到浅色模式'}
-            >
-              {resolvedTheme === 'light' ? (
-                <Moon className="w-5 h-5 2xl:w-6 2xl:h-6" />
-              ) : (
-                <Sun className="w-5 h-5 2xl:w-6 2xl:h-6" />
-              )}
-            </button>
             <button onClick={() => navigate('/new-setting')} className="bg-primary text-on-primary px-4 2xl:px-8 py-2 2xl:py-3 rounded-md text-sm 2xl:text-base font-medium hover:bg-primary-dim transition-all duration-300 shadow-lg shadow-primary/10">
               {t('nav.create')}
             </button>
@@ -1617,6 +1689,7 @@ const MainContent: React.FC<{ world: World; setWorld: React.Dispatch<React.SetSt
               <Route path="/factions" element={<FactionsView />} />
               <Route path="/factions/:id" element={<FactionDetailView />} />
               <Route path="/characters" element={<CharactersView />} />
+              <Route path="/characters/config" element={<CharacterConfigView />} />
               <Route path="/characters/:id" element={<CharacterDetailView />} />
               <Route path="/items" element={<ItemsView />} />
               <Route path="/items/:id" element={<ItemDetailView />} />
@@ -1634,7 +1707,6 @@ const MainContent: React.FC<{ world: World; setWorld: React.Dispatch<React.SetSt
               <Route path="/novel/ai" element={<NovelView />} />
               <Route path="/user" element={<UserDetailView />} />
               <Route path="/new-setting" element={<NewSettingView />} />
-              <Route path="/theme-test" element={<ThemeTestView />} />
               <Route path="*" element={<OverviewView />} />
             </Routes>
           </AnimatePresence>
